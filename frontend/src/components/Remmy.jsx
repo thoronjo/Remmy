@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 
 const REMMY_STATES = {
-  sleeping:  { eyeScale: 0.15, color: '#444',    wings: 'closed',  float: false, glow: false  },
-  waking:    { eyeScale: 0.5,  color: '#666',    wings: 'closed',  float: false, glow: false  },
-  alert:     { eyeScale: 1.0,  color: '#E8FF47', wings: 'normal',  float: true,  glow: false  },
-  charged:   { eyeScale: 1.1,  color: '#E8FF47', wings: 'spread',  float: true,  glow: true   },
-  glowing:   { eyeScale: 1.1,  color: '#E8FF47', wings: 'spread',  float: true,  glow: true   },
-  powerful:  { eyeScale: 1.2,  color: '#E8FF47', wings: 'spread',  float: true,  glow: true   },
-  legendary: { eyeScale: 1.3,  color: '#FFD700', wings: 'spread',  float: true,  glow: true   },
-  judging:   { eyeScale: 0.4,  color: '#888',    wings: 'normal',  float: false, glow: false  },
-  zoomies:   { eyeScale: 1.2,  color: '#47ff8a', wings: 'spread',  float: false, glow: true   },
-  blocking:  { eyeScale: 1.0,  color: '#ff6b6b', wings: 'spread',  float: false, glow: false  },
-  happy:     { eyeScale: 1.2,  color: '#47ff8a', wings: 'spread',  float: true,  glow: true   },
+  sleeping:  { eyeScale: 0.1,  color: '#444',    wingSpread: 8,   float: false, glow: false },
+  waking:    { eyeScale: 0.5,  color: '#666',    wingSpread: 8,   float: false, glow: false },
+  alert:     { eyeScale: 1.0,  color: '#E8FF47', wingSpread: 8,   float: true,  glow: false },
+  charged:   { eyeScale: 1.0,  color: '#E8FF47', wingSpread: 12,  float: true,  glow: true  },
+  glowing:   { eyeScale: 1.0,  color: '#E8FF47', wingSpread: 12,  float: true,  glow: true  },
+  powerful:  { eyeScale: 1.1,  color: '#E8FF47', wingSpread: 15,  float: true,  glow: true  },
+  legendary: { eyeScale: 1.1,  color: '#FFD700', wingSpread: 15,  float: true,  glow: true  },
+  judging:   { eyeScale: 0.35, color: '#777',    wingSpread: 8,   float: false, glow: false },
+  zoomies:   { eyeScale: 1.2,  color: '#47ff8a', wingSpread: 20,  float: false, glow: true  },
+  blocking:  { eyeScale: 1.0,  color: '#ff6b6b', wingSpread: 8,   float: false, glow: false },
+  happy:     { eyeScale: 1.1,  color: '#47ff8a', wingSpread: 20,  float: true,  glow: true  },
 };
 
 const getMoodFromStage = (stage, level) => {
@@ -44,174 +44,252 @@ export default function Remmy({ stage = 'intake', level = 1, mood: forcedMood = 
     return () => clearInterval(blinkInterval);
   }, []);
 
-  const s = size;
-  const eyeRy = blink ? 0.5 : 11 * state.eyeScale;
-  const pupilRy = blink ? 0.3 : 5 * state.eyeScale;
   const c = state.color;
   const isLegendary = mood === 'legendary';
+  const isHappy = mood === 'happy' || mood === 'zoomies' || mood === 'legendary';
+  const isJudging = mood === 'judging' || mood === 'sleeping' || mood === 'waking';
   const bodyFill = isLegendary ? '#2a2200' : '#111';
-  const wingAngle = state.wings === 'spread' ? 20 : 15;
+  const w = state.wingSpread;
+
+  // Pupil size based on mood
+  const pupilR = blink ? 0.5 : 7 * state.eyeScale;
+  const eyeOuterR = 14;
 
   return (
     <div style={{
-      width: s,
-      height: s * 1.2,
+      width: size,
+      height: size * 1.25,
       position: 'relative',
       animation: mood === 'zoomies'
         ? 'zoomies 0.5s ease-in-out infinite'
         : state.float ? 'float 3s ease-in-out infinite' : 'none',
       filter: state.glow
-        ? `drop-shadow(0 0 ${s * 0.12}px ${c})`
+        ? `drop-shadow(0 0 ${size * 0.1}px ${c})`
         : 'none',
       transition: 'filter 0.5s ease',
     }}>
       <svg
-        viewBox="0 0 100 120"
-        width={s}
-        height={s * 1.2}
+        viewBox="0 0 120 150"
+        width={size}
+        height={size * 1.25}
         style={{ overflow: 'visible' }}
       >
         {/* Crown for legendary */}
         {isLegendary && (
-          <path d="M 28 22 L 33 8 L 50 16 L 67 8 L 72 22"
-            fill="none" stroke="#FFD700" strokeWidth="2.5"
-            strokeLinecap="round" strokeLinejoin="round"
-          />
+          <>
+            <path d="M 36 22 L 42 8 L 60 16 L 78 8 L 84 22"
+              fill="none" stroke="#FFD700" strokeWidth="2.5"
+              strokeLinecap="round" strokeLinejoin="round"
+            />
+            <circle cx="36" cy="22" r="2.5" fill="#FFD700" />
+            <circle cx="60" cy="16" r="2.5" fill="#FFD700" />
+            <circle cx="84" cy="22" r="2.5" fill="#FFD700" />
+          </>
         )}
 
+        {/* Branch / perch */}
+        <rect x="5" y="128" width="110" height="10" rx="5"
+          fill="#1a1a1a" stroke="#2a2a2a" strokeWidth="1"
+        />
+
+        {/* Tail feathers below branch */}
+        <ellipse cx="45" cy="140" rx="5.5" ry="11"
+          fill={bodyFill} stroke={c} strokeWidth="1"
+          transform="rotate(-10 45 135)" opacity="0.7"
+        />
+        <ellipse cx="60" cy="142" rx="5.5" ry="12"
+          fill={bodyFill} stroke={c} strokeWidth="1" opacity="0.7"
+        />
+        <ellipse cx="75" cy="140" rx="5.5" ry="11"
+          fill={bodyFill} stroke={c} strokeWidth="1"
+          transform="rotate(10 75 135)" opacity="0.7"
+        />
+
+        {/* Feet gripping branch — left */}
+        {[[-8, 0], [-2, 9], [4, 9], [10, 7]].map(([dx, dy], i) => (
+          <line key={`lf${i}`}
+            x1="44" y1="122"
+            x2={44 + dx} y2={122 + dy}
+            stroke={c} strokeWidth="2.2" strokeLinecap="round" opacity="0.85"
+          />
+        ))}
+        {/* Feet gripping branch — right */}
+        {[[-10, 7], [-4, 9], [2, 9], [8, 0]].map(([dx, dy], i) => (
+          <line key={`rf${i}`}
+            x1="76" y1="122"
+            x2={76 + dx} y2={122 + dy}
+            stroke={c} strokeWidth="2.2" strokeLinecap="round" opacity="0.85"
+          />
+        ))}
+
         {/* Wings */}
-        <ellipse cx="18" cy="75" rx="14" ry="22"
-          fill={bodyFill} stroke={c} strokeWidth="1.5"
-          transform={`rotate(-${wingAngle} 18 75)`}
+        <ellipse cx="26" cy="93" rx="12" ry="24"
+          fill={isLegendary ? '#221800' : '#0f0f0f'}
+          stroke={c} strokeWidth="1.5"
+          transform={`rotate(-${w} 26 93)`}
         />
-        <ellipse cx="82" cy="75" rx="14" ry="22"
-          fill={bodyFill} stroke={c} strokeWidth="1.5"
-          transform={`rotate(${wingAngle} 82 75)`}
+        {/* Wing feather texture left */}
+        {[82, 90, 98, 106].map((y, i) => (
+          <line key={`wl${i}`}
+            x1={20 + i} y1={y - 6}
+            x2={30} y2={y}
+            stroke={`rgba(${isLegendary ? '255,215,0' : '232,255,71'},0.18)`}
+            strokeWidth="0.8"
+          />
+        ))}
+
+        <ellipse cx="94" cy="93" rx="12" ry="24"
+          fill={isLegendary ? '#221800' : '#0f0f0f'}
+          stroke={c} strokeWidth="1.5"
+          transform={`rotate(${w} 94 93)`}
+        />
+        {/* Wing feather texture right */}
+        {[82, 90, 98, 106].map((y, i) => (
+          <line key={`wr${i}`}
+            x1={100 - i} y1={y - 6}
+            x2={90} y2={y}
+            stroke={`rgba(${isLegendary ? '255,215,0' : '232,255,71'},0.18)`}
+            strokeWidth="0.8"
+          />
+        ))}
+
+        {/* Body — round and plump */}
+        <ellipse cx="60" cy="95" rx="34" ry="32"
+          fill={bodyFill} stroke={c} strokeWidth="2"
         />
 
-        {/* Body */}
-        <ellipse cx="50" cy="80" rx="26" ry="30"
-          fill={bodyFill} stroke={c} strokeWidth="1.5"
-        />
-
-        {/* Chest feather rings */}
-        <ellipse cx="50" cy="85" rx="16" ry="20"
-          fill={`rgba(${isLegendary ? '255,215,0' : '232,255,71'},0.05)`}
-          stroke={`rgba(${isLegendary ? '255,215,0' : '232,255,71'},0.12)`}
+        {/* Chest belly */}
+        <ellipse cx="60" cy="100" rx="20" ry="22"
+          fill={`rgba(${isLegendary ? '255,215,0' : '232,255,71'},0.04)`}
+          stroke={`rgba(${isLegendary ? '255,215,0' : '232,255,71'},0.1)`}
           strokeWidth="1"
         />
-        <ellipse cx="50" cy="91" rx="9" ry="12"
-          fill={`rgba(${isLegendary ? '255,215,0' : '232,255,71'},0.04)`}
-          stroke={`rgba(${isLegendary ? '255,215,0' : '232,255,71'},0.08)`}
-          strokeWidth="0.5"
+        {/* Chest feather arcs */}
+        {[88, 96, 104].map((y, i) => (
+          <path key={`cf${i}`}
+            d={`M ${48 - i} ${y} Q 60 ${y + 4} ${72 + i} ${y}`}
+            fill="none"
+            stroke={`rgba(${isLegendary ? '255,215,0' : '232,255,71'},${0.15 - i * 0.04})`}
+            strokeWidth="0.8"
+          />
+        ))}
+
+        {/* HEAD — big round */}
+        <circle cx="60" cy="55" r="36"
+          fill={bodyFill} stroke={c} strokeWidth="2"
         />
 
-        {/* Head */}
-        <ellipse cx="50" cy="44" rx="28" ry="26"
-          fill={bodyFill} stroke={c} strokeWidth="1.5"
-        />
-
-        {/* Ear tufts — sharp and angular */}
-        <polygon points="28,22 22,4 36,18"
-          fill={bodyFill} stroke={c} strokeWidth="1.5"
+        {/* Ear tufts — sharp angular */}
+        <polygon points="38,26 30,8 48,22"
+          fill={bodyFill} stroke={c} strokeWidth="1.8"
           strokeLinejoin="round"
         />
-        <polygon points="72,22 78,4 64,18"
-          fill={bodyFill} stroke={c} strokeWidth="1.5"
+        <line x1="37" y1="24" x2="33" y2="12"
+          stroke={`rgba(${isLegendary ? '255,215,0' : '232,255,71'},0.3)`}
+          strokeWidth="0.8"
+        />
+        <polygon points="82,26 90,8 72,22"
+          fill={bodyFill} stroke={c} strokeWidth="1.8"
           strokeLinejoin="round"
+        />
+        <line x1="83" y1="24" x2="87" y2="12"
+          stroke={`rgba(${isLegendary ? '255,215,0' : '232,255,71'},0.3)`}
+          strokeWidth="0.8"
         />
 
         {/* Facial disc */}
-        <ellipse cx="50" cy="46" rx="22" ry="20"
-          fill="none"
+        <ellipse cx="60" cy="57" rx="28" ry="26"
+          fill={`rgba(${isLegendary ? '255,215,0' : '232,255,71'},0.03)`}
           stroke={`rgba(${isLegendary ? '255,215,0' : '232,255,71'},0.18)`}
-          strokeWidth="1"
+          strokeWidth="1.2"
         />
 
-        {/* Left eye socket */}
-        <ellipse cx="37" cy="42" rx="10" ry="11"
-          fill="#0a0a0a" stroke={c} strokeWidth="1.5"
+        {/* Eyebrow ridges */}
+        <path
+          d={isJudging
+            ? "M 33 38 Q 42 32 50 36"
+            : isHappy
+            ? "M 34 35 Q 42 29 50 33"
+            : "M 34 37 Q 42 33 50 36"}
+          fill="none" stroke={c} strokeWidth="1.6"
+          strokeLinecap="round"
         />
-        {/* Left iris glow */}
-        <ellipse cx="37" cy="42" rx="7" ry={7 * state.eyeScale}
-          fill={c} opacity="0.15"
-          style={{ transition: 'ry 0.1s' }}
+        <path
+          d={isJudging
+            ? "M 87 38 Q 78 32 70 36"
+            : isHappy
+            ? "M 86 35 Q 78 29 70 33"
+            : "M 86 37 Q 78 33 70 36"}
+          fill="none" stroke={c} strokeWidth="1.6"
+          strokeLinecap="round"
         />
-        {/* Left pupil */}
-        <ellipse cx="37" cy="43" rx="4.5" ry={pupilRy}
+
+        {/* LEFT EYE */}
+        <circle cx="46" cy="52" r={eyeOuterR}
+          fill="#0a0a0a" stroke={c} strokeWidth="1.8"
+        />
+        {/* Iris glow */}
+        <circle cx="46" cy="52" r="10"
+          fill={c} opacity="0.1"
+        />
+        {/* Pupil */}
+        <circle cx="46" cy="53" r={pupilR}
           fill={c}
-          style={{ transition: 'ry 0.1s' }}
+          style={{ transition: 'r 0.1s', transformOrigin: '46px 53px' }}
         />
         {/* Judging eyelid */}
-        {mood === 'judging' && (
-          <rect x="27" y="31" width="20" height="9" fill={bodyFill} />
-        )}
-        {/* Left shine */}
-        <circle cx="39.5" cy="39.5" r="1.8" fill="#fff" opacity="0.9" />
-        <circle cx="35" cy="44" r="0.7" fill="#fff" opacity="0.35" />
-
-        {/* Right eye socket */}
-        <ellipse cx="63" cy="42" rx="10" ry="11"
-          fill="#0a0a0a" stroke={c} strokeWidth="1.5"
-        />
-        {/* Right iris glow */}
-        <ellipse cx="63" cy="42" rx="7" ry={7 * state.eyeScale}
-          fill={c} opacity="0.15"
-          style={{ transition: 'ry 0.1s' }}
-        />
-        {/* Right pupil */}
-        <ellipse cx="63" cy="43" rx="4.5" ry={pupilRy}
-          fill={c}
-          style={{ transition: 'ry 0.1s' }}
-        />
-        {/* Judging eyelid */}
-        {mood === 'judging' && (
-          <rect x="53" y="31" width="20" height="9" fill={bodyFill} />
-        )}
-        {/* Right shine */}
-        <circle cx="65.5" cy="39.5" r="1.8" fill="#fff" opacity="0.9" />
-        <circle cx="61" cy="44" r="0.7" fill="#fff" opacity="0.35" />
-
-        {/* Beak — sharp downward triangle */}
-        <polygon points="50,52 45.5,59 54.5,59"
-          fill={c} opacity="0.85"
-        />
-        <line x1="50" y1="52" x2="50" y2="59"
-          stroke="#0a0a0a" strokeWidth="0.6"
-        />
-
-        {/* Happy mouth curve */}
-        {(mood === 'happy' || mood === 'zoomies' || mood === 'legendary') && (
-          <path d="M 46 60 Q 50 64 54 60"
-            fill="none" stroke={c}
-            strokeWidth="1.2" strokeLinecap="round"
-            opacity="0.6"
+        {isJudging && (
+          <path d="M 32 52 Q 46 40 60 52"
+            fill={bodyFill} stroke="none"
           />
         )}
+        {/* Shine */}
+        <circle cx="50" cy="47.5" r="3.5" fill="#fff" opacity="0.95" />
+        <circle cx="42" cy="55" r="1.2" fill="#fff" opacity="0.4" />
 
-        {/* Talons */}
-        {['left', 'right'].map((side, si) => {
-          const base = si === 0 ? 38 : 54;
-          return [0, 1, 2].map((t, ti) => (
-            <line
-              key={`${side}-${t}`}
-              x1={base + ti * 4} y1={108}
-              x2={base + ti * 4 + (si === 0 ? -2 + ti * 2 : ti * 2)} y2={116}
-              stroke={c} strokeWidth="1.8"
-              strokeLinecap="round"
-              opacity="0.8"
-            />
-          ));
-        })}
+        {/* RIGHT EYE */}
+        <circle cx="74" cy="52" r={eyeOuterR}
+          fill="#0a0a0a" stroke={c} strokeWidth="1.8"
+        />
+        <circle cx="74" cy="52" r="10"
+          fill={c} opacity="0.1"
+        />
+        <circle cx="74" cy="53" r={pupilR}
+          fill={c}
+          style={{ transition: 'r 0.1s', transformOrigin: '74px 53px' }}
+        />
+        {isJudging && (
+          <path d="M 60 52 Q 74 40 88 52"
+            fill={bodyFill} stroke="none"
+          />
+        )}
+        <circle cx="78" cy="47.5" r="3.5" fill="#fff" opacity="0.95" />
+        <circle cx="70" cy="55" r="1.2" fill="#fff" opacity="0.4" />
+
+        {/* BEAK */}
+        <polygon points="60,60 55,67 65,67"
+          fill={c} opacity="0.85"
+        />
+        <line x1="60" y1="60" x2="60" y2="67"
+          stroke="#080808" strokeWidth="0.8"
+        />
+
+        {/* Happy smile below beak */}
+        {isHappy && (
+          <path d="M 54 68 Q 60 74 66 68"
+            fill="none" stroke={c}
+            strokeWidth="1.5" strokeLinecap="round" opacity="0.65"
+          />
+        )}
 
         {/* Sparkles for high levels */}
         {level >= 5 && (
           <>
-            <circle cx="12" cy="28" r="2" fill={c} opacity="0.7"
+            <circle cx="10" cy="32" r="2.2" fill={c}
               style={{ animation: 'pulse 1.5s ease-in-out infinite' }} />
-            <circle cx="88" cy="28" r="2" fill={c} opacity="0.7"
+            <circle cx="110" cy="32" r="2.2" fill={c}
               style={{ animation: 'pulse 1.5s ease-in-out infinite 0.5s' }} />
-            <circle cx="50" cy="6" r="2" fill={c} opacity="0.7"
+            <circle cx="60" cy="10" r="2.2" fill={c}
               style={{ animation: 'pulse 1.5s ease-in-out infinite 1s' }} />
           </>
         )}
