@@ -15,74 +15,182 @@ export default function GutCheck({ onNext }) {
     setFastDecision,
   } = useRemmyStore();
 
-  const [timerDone, setTimerDone] = useState(false);
-  const [ready, setReady] = useState(false);
+  const [phase, setPhase] = useState('intro'); 
+  // phases: intro → timer → choose → response
 
-  useEffect(() => {
-    const timer = setTimeout(() => setReady(true), 100);
-    return () => clearTimeout(timer);
-  }, []);
+  const startTimer = () => setPhase('timer');
 
-  useEffect(() => {
-    if (!ready) return;
-    const load = async () => {
-      setAiLoading(true);
-      setAiMessage('');
-      const reply = await askRemmy(
-        `User narrowed to: ${realOptions.join(', ')} for "${decision}". Set up the 60-second gut check. Tell them: no analysis, just feel. Which one feels right in their body, not their head?`,
-        'gut_check',
-        { decision }
-      );
-      setAiMessage(reply);
-      setAiLoading(false);
-    };
-    load();
-  }, [ready]);
+  const handleTimerEnd = () => setPhase('choose');
 
   const handleChoice = async (opt) => {
     setGutChoice(opt);
+    setPhase('response');
+
     if (decisionStartTime && (Date.now() - decisionStartTime) < 86400000) {
       setFastDecision(true);
     }
     awardPoints(20, 'Completed gut check');
-    onNext();
+
+    setAiLoading(true);
+    setAiMessage('');
+    const reply = await askRemmy(
+      `User's gut chose "${opt}" over "${realOptions.filter(o => o !== opt).join(', ')}" for "${decision}". They chose without thinking. Now challenge why they might be second-guessing it. Be direct and brief.`,
+      'gut_check',
+      { decision, gutChoice: opt }
+    );
+    setAiMessage(reply);
+    setAiLoading(false);
   };
 
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+
+      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <Remmy stage="gut_check" level={gamification.level} />
+        <Remmy
+          stage="gut_check"
+          level={gamification.level}
+          mood={phase === 'response' ? 'charged' : 'judging'}
+        />
         <div>
-          <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.8rem', color: '#fff', letterSpacing: '0.05em' }}>
-            60-SECOND GUT
+          <h2 style={{
+            fontFamily: "'Bebas Neue', sans-serif",
+            fontSize: '1.8rem', color: '#fff', letterSpacing: '0.05em'
+          }}>
+            {phase === 'intro' && '60-SECOND GUT'}
+            {phase === 'timer' && 'FEEL IT.'}
+            {phase === 'choose' && "TIME'S UP."}
+            {phase === 'response' && 'YOUR GUT SPOKE.'}
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-            Feel. Don't think.
+            {phase === 'intro' && 'No analysis. Just feel.'}
+            {phase === 'timer' && 'Which option feels right in your body?'}
+            {phase === 'choose' && 'Pick without thinking. Now.'}
+            {phase === 'response' && 'Now stop second-guessing it.'}
           </p>
         </div>
       </div>
 
-      <AIMessage text={aiMessage} loading={aiLoading} />
+      {/* INTRO — explain what's about to happen */}
+      {phase === 'intro' && (
+        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <div className="card" style={{ lineHeight: 1.8, fontSize: '0.9rem', color: 'var(--text-dim)' }}>
+            <p>
+              You have <strong style={{ color: 'var(--yellow)' }}>60 seconds</strong> to sit with your options.
+            </p>
+            <p style={{ marginTop: '0.75rem' }}>
+              No researching. No analyzing. Just notice which option your body pulls toward.
+            </p>
+            <p style={{ marginTop: '0.75rem', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+              Your gut processes information faster than your conscious mind. Trust it.
+            </p>
+          </div>
 
-      {!aiLoading && aiMessage && !timerDone && (
-        <Timer seconds={60} onEnd={() => setTimerDone(true)} />
-      )}
-
-      {timerDone && (
-        <div className="fade-in">
-          <label className="label">Time's up. What did your gut say?</label>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* Show the options side by side */}
+          <div style={{ display: 'flex', gap: 12 }}>
             {realOptions.map((opt, i) => (
-              <button
-                key={i}
-                className="option-card"
-                onClick={() => handleChoice(opt)}
-                style={{ fontSize: '1rem', padding: '18px 20px' }}
-              >
+              <div key={i} style={{
+                flex: 1,
+                padding: '16px',
+                background: 'rgba(232,255,71,0.04)',
+                border: '1px solid var(--border-yellow)',
+                borderRadius: 'var(--radius)',
+                textAlign: 'center',
+                fontSize: '0.85rem',
+                color: 'var(--yellow)',
+                lineHeight: 1.5,
+              }}>
+                <div style={{
+                  fontSize: '0.6rem',
+                  color: 'var(--text-muted)',
+                  letterSpacing: '0.15em',
+                  textTransform: 'uppercase',
+                  marginBottom: 8
+                }}>
+                  Option {i === 0 ? 'A' : 'B'}
+                </div>
                 {opt}
-              </button>
+              </div>
             ))}
           </div>
+
+          <button className="btn-primary" onClick={startTimer}>
+            START THE CLOCK →
+          </button>
+        </div>
+      )}
+
+      {/* TIMER — just the clock, options visible, no Remmy commentary */}
+      {phase === 'timer' && (
+        <div className="fade-in">
+          <div style={{ display: 'flex', gap: 12, marginBottom: '1.5rem' }}>
+            {realOptions.map((opt, i) => (
+              <div key={i} style={{
+                flex: 1,
+                padding: '16px',
+                background: 'rgba(232,255,71,0.04)',
+                border: '1px solid var(--border-yellow)',
+                borderRadius: 'var(--radius)',
+                textAlign: 'center',
+                fontSize: '0.85rem',
+                color: 'var(--yellow)',
+                lineHeight: 1.5,
+              }}>
+                <div style={{
+                  fontSize: '0.6rem',
+                  color: 'var(--text-muted)',
+                  letterSpacing: '0.15em',
+                  textTransform: 'uppercase',
+                  marginBottom: 8
+                }}>
+                  Option {i === 0 ? 'A' : 'B'}
+                </div>
+                {opt}
+              </div>
+            ))}
+          </div>
+          <Timer seconds={60} onEnd={handleTimerEnd} />
+        </div>
+      )}
+
+      {/* CHOOSE — timer done, pick now */}
+      {phase === 'choose' && (
+        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{
+            padding: '14px 16px',
+            background: 'rgba(232,255,71,0.06)',
+            border: '1px solid var(--border-yellow)',
+            borderRadius: 'var(--radius)',
+            fontSize: '0.85rem',
+            color: 'var(--yellow)',
+            textAlign: 'center',
+          }}>
+            Which one were you hoping the timer would end on?
+          </div>
+
+          {realOptions.map((opt, i) => (
+            <button
+              key={i}
+              className="option-card"
+              onClick={() => handleChoice(opt)}
+              style={{ fontSize: '1rem', padding: '20px' }}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* RESPONSE — Remmy reacts to their choice */}
+      {phase === 'response' && (
+        <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <AIMessage text={aiMessage} loading={aiLoading} />
+
+          {!aiLoading && aiMessage && (
+            <button className="btn-primary" onClick={onNext}>
+              FACE MY FEARS →
+            </button>
+          )}
         </div>
       )}
     </div>
