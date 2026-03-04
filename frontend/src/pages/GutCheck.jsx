@@ -16,11 +16,18 @@ export default function GutCheck({ onNext }) {
   } = useRemmyStore();
 
   const [timerDone, setTimerDone] = useState(false);
-  const [chosen, setChosen] = useState(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    const timer = setTimeout(() => setReady(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
     const load = async () => {
       setAiLoading(true);
+      setAiMessage('');
       const reply = await askRemmy(
         `User narrowed to: ${realOptions.join(', ')} for "${decision}". Set up the 60-second gut check. Tell them: no analysis, just feel. Which one feels right in their body, not their head?`,
         'gut_check',
@@ -30,17 +37,13 @@ export default function GutCheck({ onNext }) {
       setAiLoading(false);
     };
     load();
-  }, []);
+  }, [ready]);
 
   const handleChoice = async (opt) => {
-    setChosen(opt);
     setGutChoice(opt);
-
-    // Check if fast decision (under 24 hours)
     if (decisionStartTime && (Date.now() - decisionStartTime) < 86400000) {
       setFastDecision(true);
     }
-
     awardPoints(20, 'Completed gut check');
     onNext();
   };

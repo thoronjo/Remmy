@@ -14,16 +14,23 @@ export default function Narrowing({ onNext }) {
     awardPoints,
   } = useRemmyStore();
 
+  const [ready, setReady] = useState(false);
   const isBinary = options.length <= 2;
 
+  // Small delay to ensure component is fully mounted before firing AI
   useEffect(() => {
-    // If only 2 options, auto-select both and skip selection UI
-    if (isBinary) {
-      setRealOptions(options);
-    }
+    const timer = setTimeout(() => setReady(true), 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+
+    if (isBinary) setRealOptions(options);
 
     const load = async () => {
       setAiLoading(true);
+      setAiMessage('');
       const reply = await askRemmy(
         isBinary
           ? `User has exactly 2 options for "${decision}": ${options.join(' vs ')}. Stuck for: ${daysStuck}. Call out which one is the real choice and which might be avoidance. Be surgical and direct. Set up the gut check.`
@@ -35,7 +42,7 @@ export default function Narrowing({ onNext }) {
       setAiLoading(false);
     };
     load();
-  }, []);
+  }, [ready]);
 
   const toggle = (opt) => {
     if (realOptions.includes(opt)) {
@@ -70,9 +77,8 @@ export default function Narrowing({ onNext }) {
 
       <AIMessage text={aiMessage} loading={aiLoading} />
 
-      {!aiLoading && (
+      {!aiLoading && aiMessage && (
         <>
-          {/* Binary — show both as a face-off, no selection needed */}
           {isBinary ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {options.map((opt, i) => (
@@ -88,25 +94,16 @@ export default function Narrowing({ onNext }) {
                   alignItems: 'center',
                 }}>
                   <span>{opt}</span>
-                  {i === 0 && (
-                    <span style={{
-                      fontSize: '0.65rem',
-                      letterSpacing: '0.12em',
-                      color: 'var(--text-muted)',
-                      textTransform: 'uppercase'
-                    }}>Option A</span>
-                  )}
-                  {i === 1 && (
-                    <span style={{
-                      fontSize: '0.65rem',
-                      letterSpacing: '0.12em',
-                      color: 'var(--text-muted)',
-                      textTransform: 'uppercase'
-                    }}>Option B</span>
-                  )}
+                  <span style={{
+                    fontSize: '0.65rem',
+                    letterSpacing: '0.12em',
+                    color: 'var(--text-muted)',
+                    textTransform: 'uppercase'
+                  }}>
+                    {i === 0 ? 'Option A' : 'Option B'}
+                  </span>
                 </div>
               ))}
-
               <div style={{
                 textAlign: 'center',
                 fontSize: '0.75rem',
@@ -117,7 +114,6 @@ export default function Narrowing({ onNext }) {
               </div>
             </div>
           ) : (
-            /* Multiple options — show selection UI */
             <>
               <div>
                 <label className="label">Which are real contenders?</label>
