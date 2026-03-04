@@ -57,7 +57,7 @@ export default function GutCheck({ onNext }) {
             fontFamily: "'Bebas Neue', sans-serif",
             fontSize: '1.8rem', color: '#fff', letterSpacing: '0.05em'
           }}>
-            {phase === 'intro' && '10-SECOND GUT'}
+            {phase === 'intro' && '9-SECOND GUT'}
             {phase === 'timer' && 'FEEL IT.'}
             {phase === 'choose' && "TIME'S UP."}
             {phase === 'response' && 'YOUR GUT SPOKE.'}
@@ -76,7 +76,7 @@ export default function GutCheck({ onNext }) {
         <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div className="card" style={{ lineHeight: 1.8, fontSize: '0.9rem', color: 'var(--text-dim)' }}>
             <p>
-              You have <strong style={{ color: 'var(--yellow)' }}>10 seconds</strong> to sit with your options.
+              You have <strong style={{ color: 'var(--yellow)' }}>9 seconds</strong> to sit with your options.
             </p>
             <p style={{ marginTop: '0.75rem' }}>
               No researching. No analyzing. Just notice which option your body pulls toward.
@@ -149,7 +149,7 @@ export default function GutCheck({ onNext }) {
               </div>
             ))}
           </div>
-          <Timer seconds={10} onEnd={handleTimerEnd} />
+          <Timer seconds={9} onEnd={handleTimerEnd} />
         </div>
       )}
 
