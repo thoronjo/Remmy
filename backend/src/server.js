@@ -11,25 +11,39 @@ const PORT = process.env.PORT || 3001;
 // Security headers
 app.use(helmet());
 
-// CORS — only allow your frontend
+// CORS — explicit allowed origins
 const allowedOrigins = [
-  process.env.ALLOWED_ORIGIN,
+  'https://remmy-pi.vercel.app',
   'http://localhost:5173',
+  'http://localhost:4173',
+];
+
+// Also allow any vercel preview deployments
+const allowedPatterns = [
+  /^https:\/\/remmy.*\.vercel\.app$/,
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, Postman in dev)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+    // Allow requests with no origin (mobile apps, Postman)
+    if (!origin) return callback(null, true);
+
+    // Check exact matches
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+
+    // Check pattern matches (Vercel preview URLs)
+    if (allowedPatterns.some(p => p.test(origin))) return callback(null, true);
+
+    console.log('CORS blocked origin:', origin);
+    callback(new Error('Not allowed by CORS'));
   },
-  methods: ['POST'],
+  methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type'],
   credentials: false,
 }));
+
+// Handle preflight requests explicitly
+app.options('*', cors());
 
 // Parse JSON — limit body size to prevent abuse
 app.use(express.json({ limit: '10kb' }));
@@ -37,7 +51,7 @@ app.use(express.json({ limit: '10kb' }));
 // Apply rate limiting to all routes
 app.use(apiLimiter);
 
-// Health check — no sensitive info exposed
+// Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
@@ -45,12 +59,12 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/ai', aiRoutes);
 
-// 404 handler — no internal details exposed
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-// Global error handler — no stack traces in production
+// Global error handler
 app.use((err, req, res, next) => {
   console.error('Server error:', err.message);
   res.status(500).json({
@@ -63,5 +77,4 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`Remmy backend running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV}`);
-  // Never log the API key — even in dev
 });
