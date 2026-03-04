@@ -6,39 +6,56 @@ mkdirSync('./public/screenshots', { recursive: true });
 
 const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
 
-// Generate a simple Remmy icon — black bg, yellow cat emoji style
 const svgIcon = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="80" fill="#080808"/>
   
-  <!-- Ears -->
-  <polygon points="120,160 80,60 180,140" fill="#111" stroke="#E8FF47" stroke-width="8"/>
-  <polygon points="392,160 432,60 332,140" fill="#111" stroke="#E8FF47" stroke-width="8"/>
+  <!-- Wings -->
+  <ellipse cx="90" cy="360" rx="70" ry="110" fill="#111" stroke="#E8FF47" stroke-width="8"
+    transform="rotate(-15 90 360)"/>
+  <ellipse cx="422" cy="360" rx="70" ry="110" fill="#111" stroke="#E8FF47" stroke-width="8"
+    transform="rotate(15 422 360)"/>
+
+  <!-- Body -->
+  <ellipse cx="256" cy="380" rx="130" ry="145" fill="#111" stroke="#E8FF47" stroke-width="8"/>
   
+  <!-- Chest rings -->
+  <ellipse cx="256" cy="400" rx="80" ry="100" fill="none" stroke="rgba(232,255,71,0.15)" stroke-width="4"/>
+  <ellipse cx="256" cy="420" rx="48" ry="62" fill="none" stroke="rgba(232,255,71,0.08)" stroke-width="3"/>
+
   <!-- Head -->
-  <circle cx="256" cy="260" r="160" fill="#111" stroke="#E8FF47" stroke-width="8"/>
-  
-  <!-- Eyes -->
-  <ellipse cx="196" cy="240" rx="36" ry="40" fill="#0a0a0a" stroke="#E8FF47" stroke-width="6"/>
-  <ellipse cx="316" cy="240" rx="36" ry="40" fill="#0a0a0a" stroke="#E8FF47" stroke-width="6"/>
-  <ellipse cx="200" cy="244" rx="18" ry="22" fill="#E8FF47"/>
-  <ellipse cx="320" cy="244" rx="18" ry="22" fill="#E8FF47"/>
-  <circle cx="208" cy="234" r="6" fill="#fff" opacity="0.8"/>
-  <circle cx="328" cy="234" r="6" fill="#fff" opacity="0.8"/>
-  
-  <!-- Nose -->
-  <polygon points="256,278 242,294 270,294" fill="#E8FF47" opacity="0.8"/>
-  
-  <!-- Mouth -->
-  <path d="M 228 304 Q 256 322 284 304" fill="none" stroke="#E8FF47" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
-  
-  <!-- Whiskers left -->
-  <line x1="80" y1="278" x2="196" y2="286" stroke="#E8FF47" stroke-width="3" opacity="0.4"/>
-  <line x1="80" y1="298" x2="196" y2="296" stroke="#E8FF47" stroke-width="3" opacity="0.4"/>
-  
-  <!-- Whiskers right -->
-  <line x1="432" y1="278" x2="316" y2="286" stroke="#E8FF47" stroke-width="3" opacity="0.4"/>
-  <line x1="432" y1="298" x2="316" y2="296" stroke="#E8FF47" stroke-width="3" opacity="0.4"/>
+  <ellipse cx="256" cy="210" rx="140" ry="130" fill="#111" stroke="#E8FF47" stroke-width="8"/>
+
+  <!-- Ear tufts -->
+  <polygon points="136,110 104,18 184,90" fill="#111" stroke="#E8FF47" stroke-width="8" stroke-linejoin="round"/>
+  <polygon points="376,110 408,18 328,90" fill="#111" stroke="#E8FF47" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- Facial disc -->
+  <ellipse cx="256" cy="218" rx="110" ry="100" fill="none" stroke="rgba(232,255,71,0.2)" stroke-width="5"/>
+
+  <!-- Left eye -->
+  <ellipse cx="192" cy="200" rx="50" ry="55" fill="#0a0a0a" stroke="#E8FF47" stroke-width="7"/>
+  <ellipse cx="192" cy="205" rx="32" ry="35" fill="#E8FF47"/>
+  <circle cx="208" cy="188" r="12" fill="#fff" opacity="0.9"/>
+  <circle cx="178" cy="214" r="5" fill="#fff" opacity="0.35"/>
+
+  <!-- Right eye -->
+  <ellipse cx="320" cy="200" rx="50" ry="55" fill="#0a0a0a" stroke="#E8FF47" stroke-width="7"/>
+  <ellipse cx="320" cy="205" rx="32" ry="35" fill="#E8FF47"/>
+  <circle cx="336" cy="188" r="12" fill="#fff" opacity="0.9"/>
+  <circle cx="306" cy="214" r="5" fill="#fff" opacity="0.35"/>
+
+  <!-- Beak -->
+  <polygon points="256,256 228,296 284,296" fill="#E8FF47" opacity="0.85"/>
+  <line x1="256" y1="256" x2="256" y2="296" stroke="#080808" stroke-width="3"/>
+
+  <!-- Talons -->
+  <line x1="196" y1="500" x2="178" y2="512" stroke="#E8FF47" stroke-width="9" stroke-linecap="round"/>
+  <line x1="216" y1="504" x2="208" y2="512" stroke="#E8FF47" stroke-width="9" stroke-linecap="round"/>
+  <line x1="236" y1="506" x2="236" y2="512" stroke="#E8FF47" stroke-width="9" stroke-linecap="round"/>
+  <line x1="276" y1="506" x2="276" y2="512" stroke="#E8FF47" stroke-width="9" stroke-linecap="round"/>
+  <line x1="296" y1="504" x2="304" y2="512" stroke="#E8FF47" stroke-width="9" stroke-linecap="round"/>
+  <line x1="316" y1="500" x2="334" y2="512" stroke="#E8FF47" stroke-width="9" stroke-linecap="round"/>
 </svg>
 `;
 
