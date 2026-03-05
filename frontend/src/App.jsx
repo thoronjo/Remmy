@@ -45,8 +45,8 @@ export default function App() {
     }
 
     // CP flash
-    if (gamification.points > prev.points) {
-      const diff = gamification.points - prev.points;
+    if (gamification.clarityPoints > prev.clarityPoints) {
+      const diff = gamification.clarityPoints - prev.clarityPoints;
       setCpFlash({ amount: diff, id: Date.now() });
     }
 
