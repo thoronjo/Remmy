@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import useRemmyStore from './store/useRemmyStore';
 import ProgressBar from './components/ProgressBar';
 import Intake from './pages/Intake';
@@ -28,52 +28,58 @@ export default function App() {
   const [currentAchievement, setCurrentAchievement] = useState(null);
   const [levelUpShow, setLevelUpShow] = useState(null);
   const [cpFlash, setCpFlash] = useState(null);
+  const prevGamificationRef = useRef(null);
 
   // Scroll to top whenever stage changes
   useEffect(() => {
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
   }, [stage]);
-  // Watch gamification changes
-useEffect(() => {
-  const unsub = useRemmyStore.subscribe(
-    (state) => state.gamification,
-    (gamification, prev) => {
-      // CP flash
-      if (gamification.points > prev.points) {
-        const diff = gamification.points - prev.points;
-        setCpFlash({ amount: diff, id: Date.now() });
-      }
-      // Level up
-      if (gamification.level > prev.level) {
-        setLevelUpShow(gamification.level);
-      }
-      // New achievements
-      const newOnes = gamification.achievements.filter(
-        a => !prev.achievements.includes(a)
-      );
-      if (newOnes.length > 0) {
-        setPendingAchievements(q => [...q, ...newOnes]);
-      }
-    }
-  );
-  return unsub;
-}, []);
 
-// Queue achievements one at a time
-useEffect(() => {
-  if (!currentAchievement && pendingAchievements.length > 0) {
-    setCurrentAchievement(pendingAchievements[0]);
-    setPendingAchievements(q => q.slice(1));
-  }
-}, [pendingAchievements, currentAchievement]);
+  // Watch gamification changes
+  useEffect(() => {
+    const prev = prevGamificationRef.current;
+    if (!prev) {
+      prevGamificationRef.current = gamification;
+      return;
+    }
+
+    // CP flash
+    if (gamification.points > prev.points) {
+      const diff = gamification.points - prev.points;
+      setCpFlash({ amount: diff, id: Date.now() });
+    }
+
+    // Level up
+    if (gamification.level > prev.level) {
+      setLevelUpShow(gamification.level);
+    }
+
+    // New achievements
+    const newOnes = gamification.achievements.filter(
+      a => !prev.achievements.includes(a)
+    );
+    if (newOnes.length > 0) {
+      setPendingAchievements(q => [...q, ...newOnes]);
+    }
+
+    prevGamificationRef.current = gamification;
+  }, [gamification]);
+
+  // Queue achievements one at a time
+  useEffect(() => {
+    if (!currentAchievement && pendingAchievements.length > 0) {
+      setCurrentAchievement(pendingAchievements[0]);
+      setPendingAchievements(q => q.slice(1));
+    }
+  }, [pendingAchievements, currentAchievement]);
 
   const goNext = () => {
     const nextIdx = stageIdx + 1;
     if (nextIdx < STAGES.length) {
       setStageIdx(nextIdx);
       setStage(STAGES[nextIdx]);
-      setKey(k => k + 1); // force remount of stage component
+      setKey(k => k + 1);
     }
   };
 
@@ -170,7 +176,7 @@ useEffect(() => {
       {/* Progress */}
       {stage !== 'intake' && <ProgressBar stage={stage} />}
 
-      {/* Main — key forces full remount on stage change */}
+      {/* Main */}
       <main style={{
         flex: 1, maxWidth: 680, width: '100%',
         margin: '0 auto', padding: '1.5rem 1.25rem 4rem',
@@ -179,6 +185,7 @@ useEffect(() => {
           {renderStage()}
         </div>
       </main>
+
       {/* Gamification overlays */}
       <AchievementPopup
         achievement={currentAchievement}
@@ -189,13 +196,14 @@ useEffect(() => {
         level={levelUpShow}
         onDone={() => setLevelUpShow(null)}
       />
+
       {cpFlash && (
         <CPFlash
-        key={cpFlash.id}
-        amount={cpFlash.amount}
-        label={cpFlash.label}
-        onDone={() => setCpFlash(null)}
-      />
+          key={cpFlash.id}
+          amount={cpFlash.amount}
+          label={cpFlash.label}
+          onDone={() => setCpFlash(null)}
+        />
       )}
     </div>
   );
