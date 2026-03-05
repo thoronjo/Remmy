@@ -11,6 +11,9 @@ import Committed from './pages/Committed';
 import Implementation from './pages/Implementation';
 import Checkin from './pages/Checkin';
 import './styles/global.css';
+import AchievementPopup from './components/AchievementPopup';
+import LevelUpOverlay from './components/LevelUpOverlay';
+import CPFlash from './components/CPFlash';
 
 const STAGES = [
   'intake', 'narrowing', 'gut_check', 'resistance',
@@ -21,12 +24,49 @@ export default function App() {
   const { stage, setStage, gamification, getLevelInfo } = useRemmyStore();
   const [stageIdx, setStageIdx] = useState(0);
   const [key, setKey] = useState(0);
+  const [pendingAchievements, setPendingAchievements] = useState([]);
+  const [currentAchievement, setCurrentAchievement] = useState(null);
+  const [levelUpShow, setLevelUpShow] = useState(null);
+  const [cpFlash, setCpFlash] = useState(null);
 
   // Scroll to top whenever stage changes
   useEffect(() => {
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
   }, [stage]);
+  // Watch gamification changes
+useEffect(() => {
+  const unsub = useRemmyStore.subscribe(
+    (state) => state.gamification,
+    (gamification, prev) => {
+      // CP flash
+      if (gamification.points > prev.points) {
+        const diff = gamification.points - prev.points;
+        setCpFlash({ amount: diff, id: Date.now() });
+      }
+      // Level up
+      if (gamification.level > prev.level) {
+        setLevelUpShow(gamification.level);
+      }
+      // New achievements
+      const newOnes = gamification.achievements.filter(
+        a => !prev.achievements.includes(a)
+      );
+      if (newOnes.length > 0) {
+        setPendingAchievements(q => [...q, ...newOnes]);
+      }
+    }
+  );
+  return unsub;
+}, []);
+
+// Queue achievements one at a time
+useEffect(() => {
+  if (!currentAchievement && pendingAchievements.length > 0) {
+    setCurrentAchievement(pendingAchievements[0]);
+    setPendingAchievements(q => q.slice(1));
+  }
+}, [pendingAchievements, currentAchievement]);
 
   const goNext = () => {
     const nextIdx = stageIdx + 1;
@@ -139,6 +179,24 @@ export default function App() {
           {renderStage()}
         </div>
       </main>
+      {/* Gamification overlays */}
+      <AchievementPopup
+        achievement={currentAchievement}
+        onDone={() => setCurrentAchievement(null)}
+      />
+
+      <LevelUpOverlay
+        level={levelUpShow}
+        onDone={() => setLevelUpShow(null)}
+      />
+      {cpFlash && (
+        <CPFlash
+        key={cpFlash.id}
+        amount={cpFlash.amount}
+        label={cpFlash.label}
+        onDone={() => setCpFlash(null)}
+      />
+      )}
     </div>
   );
 }
