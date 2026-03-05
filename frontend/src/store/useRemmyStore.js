@@ -20,14 +20,14 @@ const LEVELS = [
 ];
 
 const ACHIEVEMENTS = [
-  { id: 'first_strike',   label: 'First Strike',    emoji: '🎯', condition: (s) => s.totalDecisions >= 1  },
-  { id: 'lightning',      label: 'Lightning',        emoji: '⚡', condition: (s) => s.fastDecision        },
-  { id: 'vault',          label: 'Vault',            emoji: '🔒', condition: (s) => s.completedLock       },
-  { id: 'ironwill',       label: 'Ironwill',         emoji: '💪', condition: (s) => s.resistedUnlocks >= 3},
-  { id: 'on_fire',        label: 'On Fire',          emoji: '🔥', condition: (s) => s.streak >= 5         },
-  { id: 'eyes_open',      label: 'Eyes Open',        emoji: '👁️', condition: (s) => s.scaryChoices >= 5   },
-  { id: 'pattern_breaker',label: 'Pattern Breaker',  emoji: '🧠', condition: (s) => s.totalDecisions >= 10},
-  { id: 'forged',         label: 'Forged',           emoji: '🏆', condition: (s) => s.level >= 7          },
+  { id: 'first_strike',    label: 'First Strike',   emoji: '🎯', condition: (s) => s.gamification.totalDecisions >= 1   },
+  { id: 'lightning',       label: 'Lightning',       emoji: '⚡', condition: (s) => s.fastDecision                      },
+  { id: 'vault',           label: 'Vault',           emoji: '🔒', condition: (s) => s.completedLock                     },
+  { id: 'ironwill',        label: 'Ironwill',        emoji: '💪', condition: (s) => s.resistedUnlocks >= 3              },
+  { id: 'on_fire',         label: 'On Fire',         emoji: '🔥', condition: (s) => s.gamification.streak >= 5          },
+  { id: 'eyes_open',       label: 'Eyes Open',       emoji: '👁️', condition: (s) => s.scaryChoices >= 5                 },
+  { id: 'pattern_breaker', label: 'Pattern Breaker', emoji: '🧠', condition: (s) => s.gamification.totalDecisions >= 10 },
+  { id: 'forged',          label: 'Forged',          emoji: '🏆', condition: (s) => s.gamification.level >= 7           },
 ];
 
 const getLevel = (cp) => {
@@ -83,6 +83,7 @@ const useRemmyStore = create(
       setAiMessage: (aiMessage) => set({ aiMessage }),
       setAiLoading: (aiLoading) => set({ aiLoading }),
       setDecisionStartTime: (t) => set({ decisionStartTime: t }),
+      setFastDecision: (v) => set({ fastDecision: v }),
 
       // Award points and check achievements
       awardPoints: (points, reason) => {
@@ -92,9 +93,25 @@ const useRemmyStore = create(
         const newLevel = getLevel(newCP);
         const leveledUp = newLevel.level > current.level;
 
-        // Check new achievements
+        // Increment totalDecisions when creating a decision
+        const newTotalDecisions = reason === 'Created decision'
+          ? current.totalDecisions + 1
+          : current.totalDecisions;
+
+        // Build updated state snapshot for achievement checking
+        const updatedState = {
+          ...state,
+          gamification: {
+            ...current,
+            clarityPoints: newCP,
+            level: newLevel.level,
+            totalDecisions: newTotalDecisions,
+          },
+        };
+
+        // Check new achievements against UPDATED state
         const newAchievements = ACHIEVEMENTS.filter(a =>
-          !current.achievements.includes(a.id) && a.condition(state)
+          !current.achievements.includes(a.id) && a.condition(updatedState)
         ).map(a => a.id);
 
         set({
@@ -102,8 +119,9 @@ const useRemmyStore = create(
             ...current,
             clarityPoints: newCP,
             level: newLevel.level,
+            totalDecisions: newTotalDecisions,
             achievements: [...current.achievements, ...newAchievements],
-          }
+          },
         });
 
         return { leveledUp, newLevel, newAchievements, points };
@@ -116,8 +134,7 @@ const useRemmyStore = create(
           gamification: {
             ...state.gamification,
             streak: newStreak,
-            totalDecisions: state.gamification.totalDecisions + 1,
-          }
+          },
         });
       },
 

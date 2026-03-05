@@ -28,43 +28,60 @@ export default function App() {
   const [currentAchievement, setCurrentAchievement] = useState(null);
   const [levelUpShow, setLevelUpShow] = useState(null);
   const [cpFlash, setCpFlash] = useState(null);
-  const prevGamificationRef = useRef(null);
 
-  // Scroll to top whenever stage changes
+  const clarityPoints = useRemmyStore(s => s.gamification.clarityPoints);
+  const level = useRemmyStore(s => s.gamification.level);
+  const achievements = useRemmyStore(s => s.gamification.achievements);
+
+  const prevCPRef = useRef(null);
+  const prevLevelRef = useRef(null);
+  const prevAchievementsRef = useRef(null);
+
+  // Scroll to top on stage change
   useEffect(() => {
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
   }, [stage]);
 
-  // Watch gamification changes
+  // CP flash
   useEffect(() => {
-    const prev = prevGamificationRef.current;
-    if (!prev) {
-      prevGamificationRef.current = gamification;
+    if (prevCPRef.current === null) {
+      prevCPRef.current = clarityPoints;
       return;
     }
-
-    // CP flash
-    if (gamification.clarityPoints > prev.clarityPoints) {
-      const diff = gamification.clarityPoints - prev.clarityPoints;
+    if (clarityPoints > prevCPRef.current) {
+      const diff = clarityPoints - prevCPRef.current;
       setCpFlash({ amount: diff, id: Date.now() });
     }
+    prevCPRef.current = clarityPoints;
+  }, [clarityPoints]);
 
-    // Level up
-    if (gamification.level > prev.level) {
-      setLevelUpShow(gamification.level);
+  // Level up
+  useEffect(() => {
+    if (prevLevelRef.current === null) {
+      prevLevelRef.current = level;
+      return;
     }
+    if (level > prevLevelRef.current) {
+      setLevelUpShow(level);
+    }
+    prevLevelRef.current = level;
+  }, [level]);
 
-    // New achievements
-    const newOnes = gamification.achievements.filter(
-      a => !prev.achievements.includes(a)
+  // Achievements
+  useEffect(() => {
+    if (prevAchievementsRef.current === null) {
+      prevAchievementsRef.current = achievements;
+      return;
+    }
+    const newOnes = achievements.filter(
+      a => !prevAchievementsRef.current.includes(a)
     );
     if (newOnes.length > 0) {
       setPendingAchievements(q => [...q, ...newOnes]);
     }
-
-    prevGamificationRef.current = gamification;
-  }, [gamification]);
+    prevAchievementsRef.current = achievements;
+  }, [achievements]);
 
   // Queue achievements one at a time
   useEffect(() => {
@@ -141,7 +158,7 @@ export default function App() {
           {/* Level progress ring */}
           <div style={{ position: 'relative', width: 36, height: 36 }}>
             <svg viewBox="0 0 36 36" width={36} height={36}>
-              <circle cx="18" cy="18" r="14" fill="none" stroke="#1a1a1a" strokeWidth="3" />
+              <circle cx="18" cy="18" r="14" fill="none" stroke="#1a1a1a" strokeWidth="3"/>
               <circle
                 cx="18" cy="18" r="14" fill="none"
                 stroke="var(--yellow)" strokeWidth="3"
@@ -173,7 +190,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Progress */}
+      {/* Progress bar */}
       {stage !== 'intake' && <ProgressBar stage={stage} />}
 
       {/* Main */}
