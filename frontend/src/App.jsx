@@ -28,6 +28,7 @@ export default function App() {
   const [currentAchievement, setCurrentAchievement] = useState(null);
   const [levelUpShow, setLevelUpShow] = useState(null);
   const [cpFlash, setCpFlash] = useState(null);
+  const [history, setHistory] = useState([0]);
 
   const clarityPoints = useRemmyStore(s => s.gamification.clarityPoints);
   const level = useRemmyStore(s => s.gamification.level);
@@ -94,9 +95,19 @@ export default function App() {
   const goNext = () => {
     const nextIdx = stageIdx + 1;
     if (nextIdx < STAGES.length) {
+      setHistory(h => [...h, nextIdx]);
       setStageIdx(nextIdx);
       setStage(STAGES[nextIdx]);
       setKey(k => k + 1);
+    }
+  };
+
+  const goBack = () => {
+  if (stageIdx > 0) {
+    const prevIdx = stageIdx - 1;
+    setStageIdx(prevIdx);
+    setStage(STAGES[prevIdx]);
+    // No key change — preserve component state
     }
   };
 
@@ -192,6 +203,35 @@ export default function App() {
 
       {/* Progress bar */}
       {stage !== 'intake' && <ProgressBar stage={stage} />}
+
+      {/* Back button */}
+      {stageIdx > 0 && stage !== 'checkin' && (
+        <div style={{
+          maxWidth: 680, width: '100%',
+          margin: '0 auto',
+          padding: '0.75rem 1.25rem 0',
+      }}>
+        <button
+          onClick={goBack}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-muted)',
+            fontSize: '0.75rem',
+            fontFamily: 'var(--font-mono)',
+            letterSpacing: '0.1em',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: 0,
+            textTransform: 'uppercase',
+      }}
+     >
+      ← Back
+      </button>
+      </div>
+      )}
 
       {/* Main */}
       <main style={{
