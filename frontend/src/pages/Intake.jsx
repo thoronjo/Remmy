@@ -57,11 +57,11 @@ export default function Intake({ onNext }) {
       {/* Form */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         <div>
-          <label className="label">The Decision</label>
+          <label className="label">WHAT'S ON YOUR MIND</label>
           <textarea
             value={decision}
             onChange={e => setDecision(e.target.value.slice(0, 500))}
-            placeholder="e.g. Should I quit my job and go all-in on my startup?"
+            placeholder="e.g. I can't decide whether to quit my job and go all-in on my startup"
             rows={2}
             maxLength={500}
           />

@@ -17,18 +17,33 @@ export default function Implementation({ onNext }) {
   } = useRemmyStore();
 
   useEffect(() => {
+    let isActive = true;
+
     const load = async () => {
       setAiLoading(true);
-      const reply = await askRemmy(
-        `User committed to "${gutChoice}". Decision is locked. Now build their implementation intention using Gollwitzer's research. Ask: what is the single smallest, most concrete first action? Must be completable in under 2 hours with a clear done/not-done state. Give examples of bad vs good first actions.`,
-        'implementation',
-        { decision, gutChoice }
-      );
-      setAiMessage(reply);
-      setAiLoading(false);
+      try {
+        const reply = await askRemmy(
+          `User committed to "${gutChoice}". Decision is locked. Now build their implementation intention using Gollwitzer's research. Ask: what is the single smallest, most concrete first action? Must be completable in under 2 hours with a clear done/not-done state. Give examples of bad vs good first actions.`,
+          'implementation',
+          { decision, gutChoice }
+        );
+
+        if (isActive) {
+          setAiMessage(reply);
+        }
+      } finally {
+        if (isActive) {
+          setAiLoading(false);
+        }
+      }
     };
+
     load();
-  }, []);
+
+    return () => {
+      isActive = false;
+    };
+  }, [decision, gutChoice, setAiLoading, setAiMessage]);
 
   const handleSubmit = () => {
     if (!firstAction.trim() || !actionTime.trim() || !obstacle.trim() || !obstacleIf.trim()) return;
@@ -114,7 +129,7 @@ export default function Implementation({ onNext }) {
             onClick={handleSubmit}
             disabled={!allFilled}
           >
-            SEAL THE PLAN →
+            SEAL THE PLAN ->
           </button>
         </div>
       )}

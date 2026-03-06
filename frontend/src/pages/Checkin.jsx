@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Remmy from '../components/Remmy';
 import AIMessage from '../components/AIMessage';
 import useRemmyStore from '../store/useRemmyStore';
@@ -8,6 +8,7 @@ export default function Checkin({ onRestart }) {
   const {
     gutChoice, firstAction, actionTime,
     obstacle, obstacleIf, gamification,
+    lockDays,
     setCheckinResult,
     aiMessage, setAiMessage,
     aiLoading, setAiLoading,
@@ -17,37 +18,69 @@ export default function Checkin({ onRestart }) {
 
   const [result, setResult] = useState(null);
   const [showStats, setShowStats] = useState(false);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
+    let isActive = true;
+
     const load = async () => {
       setAiLoading(true);
-      const reply = await askRemmy(
-        `User committed to "${gutChoice}". Their implementation intention: IF ${actionTime} THEN "${firstAction}". IF obstacle (${obstacle}) THEN ${obstacleIf}. Check in — did they do it? Present 3 options and hold them accountable.`,
-        'checkin',
-        { gutChoice }
-      );
-      setAiMessage(reply);
-      setAiLoading(false);
+      try {
+        const reply = await askRemmy(
+          `User committed to "${gutChoice}". Their implementation intention: IF ${actionTime} THEN "${firstAction}". IF obstacle (${obstacle}) THEN ${obstacleIf}. Check in - did they do it? Present 3 options and hold them accountable.`,
+          'checkin',
+          { gutChoice }
+        );
+
+        if (isActive) {
+          setAiMessage(reply);
+        }
+      } finally {
+        if (isActive) {
+          setAiLoading(false);
+        }
+      }
     };
+
     load();
-  }, []);
+
+    return () => {
+      isActive = false;
+    };
+  }, [actionTime, firstAction, gutChoice, obstacle, obstacleIf, setAiLoading, setAiMessage]);
 
   const handleResult = async (r) => {
+    const requestId = requestIdRef.current + 1;
+    requestIdRef.current = requestId;
+
     setResult(r);
     setCheckinResult(r);
 
-    if (r === 'yes') awardPoints(100, 'Completed first action');
+    if (r === 'yes') {
+      awardPoints(100, 'Completed first action');
+    }
 
     setAiLoading(true);
-    const prompts = {
-      yes: `User completed "${firstAction}" on time. Celebrate briefly — not too much, this is what they're supposed to do. Then immediately pivot: what's the next action? Keep momentum.`,
-      rescheduled: `User rescheduled "${firstAction}". Ask directly: legitimate reason or avoidance? Don't let them off the hook. Make them commit to a specific new time right now.`,
-      no: `User did NOT complete "${firstAction}". This is critical. Call out the pattern: they decided, committed, made a plan, and still didn't act. Ask what story they told themselves. Be direct but not cruel.`,
-    };
-    const reply = await askRemmy(prompts[r], 'checkin', { gutChoice, firstAction });
-    setAiMessage(reply);
-    setAiLoading(false);
-    if (r === 'yes') setShowStats(true);
+    try {
+      const prompts = {
+        yes: `User completed "${firstAction}" on time. Celebrate briefly - not too much, this is what they're supposed to do. Then immediately pivot: what's the next action? Keep momentum.`,
+        rescheduled: `User rescheduled "${firstAction}". Ask directly: legitimate reason or avoidance? Don't let them off the hook. Make them commit to a specific new time right now.`,
+        no: `User did NOT complete "${firstAction}". This is critical. Call out the pattern: they decided, committed, made a plan, and still didn't act. Ask what story they told themselves. Be direct but not cruel.`,
+      };
+
+      const reply = await askRemmy(prompts[r], 'checkin', { gutChoice, firstAction });
+
+      if (requestIdRef.current === requestId) {
+        setAiMessage(reply);
+        if (r === 'yes') {
+          setShowStats(true);
+        }
+      }
+    } finally {
+      if (requestIdRef.current === requestId) {
+        setAiLoading(false);
+      }
+    }
   };
 
   const achievements = getAchievements().filter(a => a.unlocked);
@@ -81,13 +114,13 @@ export default function Checkin({ onRestart }) {
       {!aiLoading && !result && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <button className="btn-primary" onClick={() => handleResult('yes')} style={{ background: 'var(--success)', color: '#0a0a0a' }}>
-            ✅ Yes, I did it
+            Yes, I did it
           </button>
           <button className="btn-secondary" onClick={() => handleResult('rescheduled')}>
-            📅 No, but I rescheduled
+            No, but I rescheduled
           </button>
           <button className="btn-danger" onClick={() => handleResult('no')}>
-            ❌ No, I didn't do it
+            No, I did not do it
           </button>
         </div>
       )}
@@ -127,7 +160,7 @@ export default function Checkin({ onRestart }) {
             borderRadius: 'var(--radius)', padding: '12px',
             fontSize: '0.8rem', color: 'var(--yellow)', textAlign: 'center',
           }}>
-            🔒 Locked: {useRemmyStore.getState().lockDays} days
+            Locked: {lockDays} days
           </div>
         </div>
       )}

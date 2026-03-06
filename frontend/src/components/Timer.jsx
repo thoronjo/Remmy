@@ -4,14 +4,21 @@ export default function Timer({ seconds, onEnd }) {
   const [left, setLeft] = useState(seconds);
 
   useEffect(() => {
+    setLeft(seconds);
+
     const iv = setInterval(() => {
-      setLeft(l => {
-        if (l <= 1) { clearInterval(iv); onEnd?.(); return 0; }
-        return l - 1;
+      setLeft((current) => {
+        if (current <= 1) {
+          clearInterval(iv);
+          onEnd?.();
+          return 0;
+        }
+        return current - 1;
       });
     }, 1000);
+
     return () => clearInterval(iv);
-  }, []);
+  }, [seconds, onEnd]);
 
   const pct = (left / seconds) * 100;
 
