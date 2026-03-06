@@ -44,6 +44,29 @@ export default function App() {
     document.body.scrollTop = 0;
   }, [stage]);
 
+  // Push browser history state on stage change
+  useEffect(() => {
+    window.history.pushState({ stageIdx }, '', window.location.pathname);
+  }, [stageIdx]);
+
+  // Intercept browser back button
+  useEffect(() => {
+    const handlePopState = (e) => {
+      if (stageIdx > 0) {
+        const prevIdx = stageIdx - 1;
+        setStageIdx(prevIdx);
+        setStage(STAGES[prevIdx]);
+        window.history.pushState({ stageIdx: prevIdx }, '', window.location.pathname);
+      } else {
+        // At first stage — prevent leaving app
+        window.history.pushState({ stageIdx: 0 }, '', window.location.pathname);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [stageIdx]);
+
   // CP flash
   useEffect(() => {
     if (prevCPRef.current === null) {
@@ -103,15 +126,15 @@ export default function App() {
   };
 
   const goBack = () => {
-  if (stageIdx > 0) {
-    const prevIdx = stageIdx - 1;
-    setStageIdx(prevIdx);
-    setStage(STAGES[prevIdx]);
-    // No key change — preserve component state
+    if (stageIdx > 0) {
+      const prevIdx = stageIdx - 1;
+      setStageIdx(prevIdx);
+      setStage(STAGES[prevIdx]);
     }
   };
 
   const goRestart = () => {
+    setHistory([0]);
     setStageIdx(0);
     setStage('intake');
     setKey(k => k + 1);
@@ -210,27 +233,27 @@ export default function App() {
           maxWidth: 680, width: '100%',
           margin: '0 auto',
           padding: '0.75rem 1.25rem 0',
-      }}>
-        <button
-          onClick={goBack}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-muted)',
-            fontSize: '0.75rem',
-            fontFamily: 'var(--font-mono)',
-            letterSpacing: '0.1em',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: 0,
-            textTransform: 'uppercase',
-      }}
-     >
-      ← Back
-      </button>
-      </div>
+        }}>
+          <button
+            onClick={goBack}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-muted)',
+              fontSize: '0.75rem',
+              fontFamily: 'var(--font-mono)',
+              letterSpacing: '0.1em',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: 0,
+              textTransform: 'uppercase',
+            }}
+          >
+            ← Back
+          </button>
+        </div>
       )}
 
       {/* Main */}
