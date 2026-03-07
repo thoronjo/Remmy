@@ -27,7 +27,7 @@ export default function Intake({ onNext }) {
     awardPoints(10, 'Created decision');
 
     // Save to Supabase if logged in
-    await syncDecision();
+    syncDecision().catch(err => console.error('Sync failed:', err));
 
     setAiLoading(true);
     setAiMessage('');
