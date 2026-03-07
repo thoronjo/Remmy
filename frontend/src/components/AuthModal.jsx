@@ -32,12 +32,25 @@ export default function AuthModal({ onClose }) {
 
     try {
       if (mode === 'signup') {
-        await signUp(email, password);
-        setSuccess('Check your email to confirm your account.');
-      } else {
-        await signIn(email, password);
-        onClose();
+        const signUpResult = await signUp(email, password);
+
+        if (signUpResult?.session) {
+          onClose();
+          return;
+        }
+
+        try {
+          await signIn(email, password);
+          onClose();
+          return;
+        } catch (signInErr) {
+          setError(signInErr.message || 'Account created, but sign in failed.');
+          return;
+        }
       }
+
+      await signIn(email, password);
+      onClose();
     } catch (err) {
       setError(err.message || 'Something went wrong');
     } finally {
@@ -299,3 +312,4 @@ export default function AuthModal({ onClose }) {
     </div>
   );
 }
+
