@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import useRemmyStore from './store/useRemmyStore';
+import useAuthStore from './store/useAuthStore';
 import ProgressBar from './components/ProgressBar';
 import Intake from './pages/Intake';
 import Narrowing from './pages/Narrowing';
@@ -14,6 +15,7 @@ import './styles/global.css';
 import AchievementPopup from './components/AchievementPopup';
 import LevelUpOverlay from './components/LevelUpOverlay';
 import CPFlash from './components/CPFlash';
+import AuthModal from './components/AuthModal';
 
 const STAGES = [
   'intake', 'narrowing', 'gut_check', 'resistance',
@@ -22,6 +24,8 @@ const STAGES = [
 
 export default function App() {
   const { stage, setStage, gamification, getLevelInfo } = useRemmyStore();
+  const { user, initialize, logout, syncGamification } = useAuthStore();
+
   const [stageIdx, setStageIdx] = useState(0);
   const [key, setKey] = useState(0);
   const [pendingAchievements, setPendingAchievements] = useState([]);
@@ -29,6 +33,7 @@ export default function App() {
   const [levelUpShow, setLevelUpShow] = useState(null);
   const [cpFlash, setCpFlash] = useState(null);
   const [history, setHistory] = useState([0]);
+  const [showAuth, setShowAuth] = useState(false);
 
   const clarityPoints = useRemmyStore(s => s.gamification.clarityPoints);
   const level = useRemmyStore(s => s.gamification.level);
@@ -44,6 +49,17 @@ export default function App() {
     document.body.scrollTop = 0;
   }, [stage]);
 
+  // Initialize auth
+  useEffect(() => {
+    const unsubscribe = initialize();
+    return unsubscribe;
+  }, []);
+
+  // Sync gamification to Supabase when CP changes
+  useEffect(() => {
+    if (user) syncGamification();
+  }, [clarityPoints, user]);
+
   // Push browser history state on stage change
   useEffect(() => {
     window.history.pushState({ stageIdx }, '', window.location.pathname);
@@ -51,14 +67,13 @@ export default function App() {
 
   // Intercept browser back button
   useEffect(() => {
-    const handlePopState = (e) => {
+    const handlePopState = () => {
       if (stageIdx > 0) {
         const prevIdx = stageIdx - 1;
         setStageIdx(prevIdx);
         setStage(STAGES[prevIdx]);
         window.history.pushState({ stageIdx: prevIdx }, '', window.location.pathname);
       } else {
-        // At first stage — prevent leaving app
         window.history.pushState({ stageIdx: 0 }, '', window.location.pathname);
       }
     };
@@ -168,19 +183,22 @@ export default function App() {
         backdropFilter: 'blur(10px)',
         position: 'sticky', top: 0, zIndex: 100,
       }}>
+        {/* Logo */}
         <div style={{
           fontFamily: "'Bebas Neue', sans-serif",
-          fontSize: '1.6rem', color: 'var(--yellow)', letterSpacing: '0.1em'
+          fontSize: '1.6rem', color: 'var(--yellow)', letterSpacing: '0.1em',
         }}>
           REMMY
         </div>
 
-        {/* Gamification HUD */}
+        {/* Right side — gamification + auth */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+
+          {/* CP + level name */}
           <div style={{ textAlign: 'right' }}>
             <div style={{
               fontSize: '0.65rem', color: 'var(--text-muted)',
-              letterSpacing: '0.1em', textTransform: 'uppercase'
+              letterSpacing: '0.1em', textTransform: 'uppercase',
             }}>
               {levelInfo.current.name}
             </div>
@@ -211,6 +229,7 @@ export default function App() {
             </div>
           </div>
 
+          {/* Streak */}
           {gamification.streak > 0 && (
             <div style={{
               fontSize: '0.75rem', color: 'var(--yellow)',
@@ -220,6 +239,46 @@ export default function App() {
             }}>
               🔥 {gamification.streak}
             </div>
+          )}
+
+          {/* Auth button */}
+          {user ? (
+            <button
+              onClick={logout}
+              style={{
+                background: 'none',
+                border: '1px solid var(--border)',
+                color: 'var(--text-muted)',
+                borderRadius: 20,
+                padding: '4px 12px',
+                fontSize: '0.7rem',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.1em',
+                cursor: 'pointer',
+                textTransform: 'uppercase',
+              }}
+            >
+              Sign Out
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowAuth(true)}
+              style={{
+                background: 'var(--yellow)',
+                border: 'none',
+                color: '#080808',
+                borderRadius: 20,
+                padding: '4px 14px',
+                fontSize: '0.7rem',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.1em',
+                cursor: 'pointer',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+              }}
+            >
+              Sign In
+            </button>
           )}
         </div>
       </header>
@@ -284,6 +343,11 @@ export default function App() {
           label={cpFlash.label}
           onDone={() => setCpFlash(null)}
         />
+      )}
+
+      {/* Auth Modal */}
+      {showAuth && (
+        <AuthModal onClose={() => setShowAuth(false)} />
       )}
     </div>
   );
