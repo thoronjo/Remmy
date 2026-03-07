@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Remmy from '../components/Remmy';
 import TagInput from '../components/TagInput';
 import AIMessage from '../components/AIMessage';
@@ -13,20 +14,37 @@ export default function Intake({ onNext }) {
     aiLoading, setAiLoading,
     gamification,
     setDecisionStartTime,
+    awardPoints,
+    syncDecision,
   } = useRemmyStore();
+
+  const [showContinue, setShowContinue] = useState(false);
 
   const handleStart = async () => {
     if (!decision.trim() || options.length < 2) return;
+
     setDecisionStartTime(Date.now());
+    awardPoints(10, 'Created decision');
+
+    // Save to Supabase if logged in
+    await syncDecision();
+
     setAiLoading(true);
     setAiMessage('');
+    setShowContinue(false);
+
+    const fallbackTimer = setTimeout(() => setShowContinue(true), 3000);
+
     const reply = await askRemmy(
       `User can't decide: "${decision}". Options: ${options.join(', ')}. Stuck for: ${daysStuck || 'a while'}. Call out how long they've been overthinking this, then tell them what happens next in this process. Be direct and brief.`,
       'intake',
       { decision, daysStuck }
     );
+
+    clearTimeout(fallbackTimer);
     setAiMessage(reply);
     setAiLoading(false);
+    setShowContinue(false);
   };
 
   const canProceed = !aiLoading && aiMessage;
@@ -52,14 +70,14 @@ export default function Intake({ onNext }) {
           CLARITY
         </p>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.74rem', letterSpacing: '0.05em', marginTop: '0.7rem' }}>
-          1) Describe your decision  2) Compare choices  3) Commit to one action
+          1) Describe your decision &nbsp;2) Compare choices &nbsp;3) Commit to one action
         </p>
       </div>
 
       {/* Form */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         <div>
-          <label className="label">What decision are you trying to make?</label>
+          <label className="label">WHAT'S ON YOUR MIND</label>
           <textarea
             value={decision}
             onChange={e => setDecision(e.target.value.slice(0, 500))}
@@ -70,10 +88,10 @@ export default function Intake({ onNext }) {
         </div>
 
         <div>
-          <label className="label">List your possible choices (at least 2)</label>
+          <label className="label">WHAT ARE YOUR OPTIONS? (MIN 2, MAX 8)</label>
           <TagInput
-            placeholder="Type a choice and press Enter..."
-            addLabel="Add choice"
+            placeholder="Type an option and press Enter..."
+            addLabel="Add"
             tags={options}
             onAdd={opt => options.length < 8 && setOptions([...options, opt])}
             onRemove={i => setOptions(options.filter((_, idx) => idx !== i))}
@@ -82,7 +100,7 @@ export default function Intake({ onNext }) {
         </div>
 
         <div>
-          <label className="label">How long have you been stuck?</label>
+          <label className="label">HOW LONG HAVE YOU BEEN STUCK?</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {['A few days', '1-2 weeks', '1 month', '3+ months', 'Over a year'].map(d => (
               <button
@@ -107,6 +125,17 @@ export default function Intake({ onNext }) {
       {/* AI Response */}
       <AIMessage text={aiMessage} loading={aiLoading} />
 
+      {/* Continue without AI fallback */}
+      {aiLoading && showContinue && (
+        <button
+          className="btn-secondary"
+          onClick={() => { setAiLoading(false); setShowContinue(false); onNext(); }}
+          style={{ opacity: 0.7, fontSize: '0.8rem' }}
+        >
+          Continue without Remmy's response →
+        </button>
+      )}
+
       {/* CTA */}
       {!aiMessage && !aiLoading && (
         <button
@@ -114,24 +143,26 @@ export default function Intake({ onNext }) {
           onClick={handleStart}
           disabled={!decision.trim() || options.length < 2}
         >
-          STOP OVERTHINKING -
+          STOP OVERTHINKING →
         </button>
       )}
 
       {canProceed && (
         <button className="btn-primary" onClick={onNext}>
-          LET'S GO -
+          LET'S GO →
         </button>
       )}
 
       {/* Info */}
       <div className="card" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.7 }}>
-        <p style={{ fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>What happens next</p>
+        <p style={{
+          fontSize: '0.65rem', letterSpacing: '0.12em',
+          textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8,
+        }}>
+          What happens next
+        </p>
         Eliminate fake options. Then a 60-second gut check, translate your fears, set a deadline, lock your decision, build a first action plan, and finish with accountability check-in.
       </div>
     </div>
   );
 }
-
-
-

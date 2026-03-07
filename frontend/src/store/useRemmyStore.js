@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { saveDecision, updateDecisionCheckin } from '../services/db';
+import useAuthStore from './useAuthStore';
 
 const INITIAL_GAMIFICATION = {
   clarityPoints: 0,
@@ -34,6 +36,15 @@ const getLevel = (cp) => {
   return [...LEVELS].reverse().find(l => cp >= l.minCP) || LEVELS[0];
 };
 
+// Generate a simple UUID for decisions
+const generateId = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+};
+
 const useRemmyStore = create(
   persist(
     (set, get) => ({
@@ -55,6 +66,7 @@ const useRemmyStore = create(
       checkinResult: null,
       aiMessage: '',
       aiLoading: false,
+      currentDecisionId: null,
 
       // Gamification
       gamification: INITIAL_GAMIFICATION,
@@ -79,11 +91,56 @@ const useRemmyStore = create(
       setDeadlineDays: (deadlineDays) => set({ deadlineDays }),
       setLockDays: (lockDays) => set({ lockDays }),
       setLocked: (locked) => set({ locked }),
-      setCheckinResult: (checkinResult) => set({ checkinResult }),
       setAiMessage: (aiMessage) => set({ aiMessage }),
       setAiLoading: (aiLoading) => set({ aiLoading }),
       setDecisionStartTime: (t) => set({ decisionStartTime: t }),
       setFastDecision: (v) => set({ fastDecision: v }),
+
+      // Save or update decision in Supabase
+      syncDecision: async () => {
+        const user = useAuthStore.getState().user;
+        if (!user) return;
+
+        const state = get();
+        const decisionId = state.currentDecisionId || generateId();
+
+        if (!state.currentDecisionId) {
+          set({ currentDecisionId: decisionId });
+        }
+
+        try {
+          await saveDecision(user.id, {
+            id: decisionId,
+            decision: state.decision,
+            options: state.realOptions,
+            gutChoice: state.gutChoice,
+            fears: state.fears,
+            firstAction: state.firstAction,
+            actionTime: state.actionTime,
+            daysStuck: state.daysStuck,
+            checkinResult: state.checkinResult,
+            completed: state.checkinResult === 'yes',
+          });
+        } catch (err) {
+          console.error('Failed to sync decision:', err);
+        }
+      },
+
+      // Called when checkin result is set
+      setCheckinResult: async (checkinResult) => {
+        set({ checkinResult });
+
+        const user = useAuthStore.getState().user;
+        const { currentDecisionId } = get();
+
+        if (user && currentDecisionId) {
+          try {
+            await updateDecisionCheckin(currentDecisionId, checkinResult);
+          } catch (err) {
+            console.error('Failed to update checkin:', err);
+          }
+        }
+      },
 
       // Award points and check achievements
       awardPoints: (points, reason) => {
@@ -93,12 +150,10 @@ const useRemmyStore = create(
         const newLevel = getLevel(newCP);
         const leveledUp = newLevel.level > current.level;
 
-        // Increment totalDecisions when creating a decision
         const newTotalDecisions = reason === 'Created decision'
           ? current.totalDecisions + 1
           : current.totalDecisions;
 
-        // Build updated state snapshot for achievement checking
         const updatedState = {
           ...state,
           gamification: {
@@ -109,7 +164,6 @@ const useRemmyStore = create(
           },
         };
 
-        // Check new achievements against UPDATED state
         const newAchievements = ACHIEVEMENTS.filter(a =>
           !current.achievements.includes(a.id) && a.condition(updatedState)
         ).map(a => a.id);
@@ -129,11 +183,10 @@ const useRemmyStore = create(
 
       incrementStreak: () => {
         const state = get();
-        const newStreak = state.gamification.streak + 1;
         set({
           gamification: {
             ...state.gamification,
-            streak: newStreak,
+            streak: state.gamification.streak + 1,
           },
         });
       },
@@ -175,6 +228,7 @@ const useRemmyStore = create(
         aiMessage: '',
         aiLoading: false,
         decisionStartTime: null,
+        currentDecisionId: null,
       }),
     }),
     {
