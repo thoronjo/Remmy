@@ -18,6 +18,7 @@ export default function Checkin({ onRestart }) {
 
   const [result, setResult] = useState(null);
   const [showStats, setShowStats] = useState(false);
+  const [showContinue, setShowContinue] = useState(false);
   const requestIdRef = useRef(0);
 
   useEffect(() => {
@@ -25,28 +26,32 @@ export default function Checkin({ onRestart }) {
 
     const load = async () => {
       setAiLoading(true);
+      setShowContinue(false);
+
+      const fallbackTimer = setTimeout(() => {
+        if (isActive) setShowContinue(true);
+      }, 3000);
+
       try {
         const reply = await askRemmy(
           `User committed to "${gutChoice}". Their implementation intention: IF ${actionTime} THEN "${firstAction}". IF obstacle (${obstacle}) THEN ${obstacleIf}. Check in - did they do it? Present 3 options and hold them accountable.`,
           'checkin',
           { gutChoice }
         );
-
         if (isActive) {
           setAiMessage(reply);
         }
       } finally {
+        clearTimeout(fallbackTimer);
         if (isActive) {
           setAiLoading(false);
+          setShowContinue(false);
         }
       }
     };
 
     load();
-
-    return () => {
-      isActive = false;
-    };
+    return () => { isActive = false; };
   }, [actionTime, firstAction, gutChoice, obstacle, obstacleIf, setAiLoading, setAiMessage]);
 
   const handleResult = async (r) => {
@@ -55,12 +60,18 @@ export default function Checkin({ onRestart }) {
 
     setResult(r);
     setCheckinResult(r);
+    setShowContinue(false);
 
     if (r === 'yes') {
       awardPoints(100, 'Completed first action');
     }
 
     setAiLoading(true);
+
+    const fallbackTimer = setTimeout(() => {
+      if (requestIdRef.current === requestId) setShowContinue(true);
+    }, 3000);
+
     try {
       const prompts = {
         yes: `User completed "${firstAction}" on time. Celebrate briefly - not too much, this is what they're supposed to do. Then immediately pivot: what's the next action? Keep momentum.`,
@@ -72,13 +83,13 @@ export default function Checkin({ onRestart }) {
 
       if (requestIdRef.current === requestId) {
         setAiMessage(reply);
-        if (r === 'yes') {
-          setShowStats(true);
-        }
+        if (r === 'yes') setShowStats(true);
       }
     } finally {
+      clearTimeout(fallbackTimer);
       if (requestIdRef.current === requestId) {
         setAiLoading(false);
+        setShowContinue(false);
       }
     }
   };
@@ -94,8 +105,11 @@ export default function Checkin({ onRestart }) {
           mood={result === 'yes' ? 'zoomies' : result === 'no' ? 'judging' : 'alert'}
         />
         <div>
-          <h2 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '1.8rem', color: '#fff', letterSpacing: '0.05em' }}>
-            24-HOUR CHECK
+          <h2 style={{
+            fontFamily: "'Bebas Neue', sans-serif",
+            fontSize: '1.8rem', color: '#fff', letterSpacing: '0.05em'
+          }}>
+            IMMEDIATE CHECK
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
             No hiding. Did you do it?
@@ -104,16 +118,38 @@ export default function Checkin({ onRestart }) {
       </div>
 
       <div className="card" style={{ fontSize: '0.85rem', color: 'var(--text-dim)', lineHeight: 1.6 }}>
-        <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6 }}>Your commitment</p>
+        <p style={{
+          fontSize: '0.65rem', color: 'var(--text-muted)',
+          letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6,
+        }}>
+          Your commitment
+        </p>
         <p><strong style={{ color: 'var(--yellow)' }}>{firstAction}</strong></p>
-        <p style={{ marginTop: 4, fontSize: '0.78rem', color: 'var(--text-muted)' }}>Planned for: {actionTime}</p>
+        <p style={{ marginTop: 4, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+          Planned for: {actionTime}
+        </p>
       </div>
 
       <AIMessage text={aiMessage} loading={aiLoading} />
 
+      {/* Continue without AI fallback */}
+      {aiLoading && showContinue && (
+        <button
+          className="btn-secondary"
+          onClick={() => { setAiLoading(false); setShowContinue(false); }}
+          style={{ opacity: 0.7, fontSize: '0.8rem' }}
+        >
+          Continue without Remmy's response →
+        </button>
+      )}
+
       {!aiLoading && !result && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button className="btn-primary" onClick={() => handleResult('yes')} style={{ background: 'var(--success)', color: '#0a0a0a' }}>
+          <button
+            className="btn-primary"
+            onClick={() => handleResult('yes')}
+            style={{ background: 'var(--success)', color: '#0a0a0a' }}
+          >
             Yes, I did it
           </button>
           <button className="btn-secondary" onClick={() => handleResult('rescheduled')}>
@@ -127,7 +163,10 @@ export default function Checkin({ onRestart }) {
 
       {showStats && achievements.length > 0 && (
         <div className="card fade-in">
-          <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>
+          <p style={{
+            fontSize: '0.65rem', color: 'var(--text-muted)',
+            letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12,
+          }}>
             Achievements Unlocked
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -160,7 +199,7 @@ export default function Checkin({ onRestart }) {
             borderRadius: 'var(--radius)', padding: '12px',
             fontSize: '0.8rem', color: 'var(--yellow)', textAlign: 'center',
           }}>
-            Locked: {lockDays} days
+            🔒 Locked: {lockDays} days
           </div>
         </div>
       )}
