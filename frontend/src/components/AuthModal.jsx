@@ -5,6 +5,9 @@ export default function AuthModal({ onClose }) {
   const [mode, setMode] = useState('signin'); // signin | signup
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -14,6 +17,15 @@ export default function AuthModal({ onClose }) {
       setError('Email and password required');
       return;
     }
+    if (mode === 'signup' && !confirmPassword) {
+      setError('Please confirm your password');
+      return;
+    }
+    if (mode === 'signup' && password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setLoading(true);
     setError('');
     setSuccess('');
@@ -146,7 +158,7 @@ export default function AuthModal({ onClose }) {
 
         {/* Password */}
         <input
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           placeholder="Password"
           value={password}
           onChange={e => setPassword(e.target.value)}
@@ -163,6 +175,67 @@ export default function AuthModal({ onClose }) {
             boxSizing: 'border-box',
           }}
         />
+        <button
+          type="button"
+          onClick={() => setShowPassword(prev => !prev)}
+          style={{
+            alignSelf: 'flex-end',
+            marginTop: '-0.6rem',
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            fontSize: '0.72rem',
+            fontFamily: 'var(--font-mono)',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            padding: 0,
+          }}
+        >
+          {showPassword ? 'Hide password' : 'Show password'}
+        </button>
+
+        {mode === 'signup' && (
+          <>
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              placeholder="Confirm Password"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+              style={{
+                width: '100%',
+                padding: '12px 14px',
+                background: 'var(--surface)',
+                border: '1px solid var(--border)',
+                borderRadius: 8,
+                color: '#fff',
+                fontSize: '0.9rem',
+                fontFamily: 'var(--font-mono)',
+                boxSizing: 'border-box',
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(prev => !prev)}
+              style={{
+                alignSelf: 'flex-end',
+                marginTop: '-0.6rem',
+                background: 'none',
+                border: 'none',
+                color: 'var(--text-muted)',
+                cursor: 'pointer',
+                fontSize: '0.72rem',
+                fontFamily: 'var(--font-mono)',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                padding: 0,
+              }}
+            >
+              {showConfirmPassword ? 'Hide confirm' : 'Show confirm'}
+            </button>
+          </>
+        )}
 
         {/* Error / Success */}
         {error && (
@@ -191,7 +264,15 @@ export default function AuthModal({ onClose }) {
         }}>
           {mode === 'signin' ? "Don't have an account? " : 'Already have an account? '}
           <button
-            onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(''); setSuccess(''); }}
+            onClick={() => {
+              setMode(mode === 'signin' ? 'signup' : 'signin');
+              setError('');
+              setSuccess('');
+              setPassword('');
+              setConfirmPassword('');
+              setShowPassword(false);
+              setShowConfirmPassword(false);
+            }}
             style={{
               background: 'none', border: 'none',
               color: 'var(--yellow)', cursor: 'pointer',
