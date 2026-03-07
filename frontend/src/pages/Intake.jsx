@@ -68,7 +68,7 @@ export default function Intake({ onNext }) {
         </div>
 
         <div>
-          <label className="label">Your Options (min 2, max 8)</label>
+          <label className="label">What are your options? (min 2, max 8)</label>
           <TagInput
             placeholder="Type an option and press Enter..."
             tags={options}
