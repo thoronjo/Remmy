@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import Remmy from '../components/Remmy';
 import TagInput from '../components/TagInput';
 import AIMessage from '../components/AIMessage';
@@ -45,19 +44,25 @@ export default function Intake({ onNext }) {
           color: '#fff', lineHeight: 0.95,
           marginBottom: '0.75rem',
         }}>
-          WHAT ARE YOU<br />
-          <span style={{ color: 'var(--yellow)' }}>AFRAID TO</span><br />
-          DECIDE?
+          TURN INDECISION<br />
+          INTO A <span style={{ color: 'var(--yellow)' }}>CLEAR NEXT STEP</span><br />
+          IN 10 MINUTES
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', letterSpacing: '0.08em' }}>
-          Built on CBT · ACT · Behavioral Science
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', letterSpacing: '0.06em' }}>
+          Remmy guides you through a simple decision coach and gives you one action to take today.
+        </p>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', letterSpacing: '0.2em', marginTop: '0.4rem' }}>
+          CLARITY
+        </p>
+        <p style={{ color: 'var(--text-muted)', fontSize: '0.74rem', letterSpacing: '0.05em', marginTop: '0.7rem' }}>
+          1) Describe your decision  2) Compare choices  3) Commit to one action
         </p>
       </div>
 
       {/* Form */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
         <div>
-          <label className="label">WHAT'S ON YOUR MIND</label>
+          <label className="label">What decision are you trying to make?</label>
           <textarea
             value={decision}
             onChange={e => setDecision(e.target.value.slice(0, 500))}
@@ -68,9 +73,10 @@ export default function Intake({ onNext }) {
         </div>
 
         <div>
-          <label className="label">What are your options? (min 2, max 8)</label>
+          <label className="label">List your possible choices (at least 2)</label>
           <TagInput
-            placeholder="Type an option and press Enter..."
+            placeholder="Type a choice and press Enter..."
+            addLabel="Add choice"
             tags={options}
             onAdd={opt => options.length < 8 && setOptions([...options, opt])}
             onRemove={i => setOptions(options.filter((_, idx) => idx !== i))}
@@ -81,7 +87,7 @@ export default function Intake({ onNext }) {
         <div>
           <label className="label">How long have you been stuck?</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {['A few days', '1–2 weeks', '1 month', '3+ months', 'Over a year'].map(d => (
+            {['A few days', '1-2 weeks', '1 month', '3+ months', 'Over a year'].map(d => (
               <button
                 key={d}
                 onClick={() => setDaysStuck(d)}
@@ -111,21 +117,23 @@ export default function Intake({ onNext }) {
           onClick={handleStart}
           disabled={!decision.trim() || options.length < 2}
         >
-          STOP OVERTHINKING →
+          STOP OVERTHINKING -
         </button>
       )}
 
       {canProceed && (
         <button className="btn-primary" onClick={onNext}>
-          LET'S GO →
+          LET'S GO -
         </button>
       )}
 
       {/* Info */}
       <div className="card" style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.7 }}>
         <p style={{ fontSize: '0.65rem', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: 8 }}>What happens next</p>
-        Eliminate fake options → 60-second gut check → translate your fears → set a deadline → lock your decision → first action plan → accountability check-in.
+        Eliminate fake options. Then a 60-second gut check, translate your fears, set a deadline, lock your decision, build a first action plan, and finish with accountability check-in.
       </div>
     </div>
   );
 }
+
+

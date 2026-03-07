@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function TagInput({ placeholder, tags, onAdd, onRemove, maxTags }) {
+export default function TagInput({ placeholder, addLabel = 'Add', tags, onAdd, onRemove, maxTags }) {
   const [val, setVal] = useState('');
 
   const submit = () => {
@@ -28,14 +28,14 @@ export default function TagInput({ placeholder, tags, onAdd, onRemove, maxTags }
           disabled={!val.trim() || (maxTags && tags.length >= maxTags)}
           style={{ whiteSpace: 'nowrap', width: 'auto' }}
         >
-          Add
+          {addLabel}
         </button>
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {tags.map((t, i) => (
           <div key={i} className="tag">
             <span>{t}</span>
-            <button onClick={() => onRemove(i)}>×</button>
+            <button onClick={() => onRemove(i)}>&times;</button>
           </div>
         ))}
       </div>
@@ -47,3 +47,4 @@ export default function TagInput({ placeholder, tags, onAdd, onRemove, maxTags }
     </div>
   );
 }
+
