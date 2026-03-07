@@ -46,11 +46,8 @@ export default function Intake({ onNext }) {
         }}>
           TURN INDECISION<br />
           INTO A <span style={{ color: 'var(--yellow)' }}>CLEAR NEXT STEP</span><br />
-          IN 10 MINUTES
+          IN SECONDS
         </h1>
-        <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', letterSpacing: '0.06em' }}>
-          Remmy guides you through a simple decision coach and gives you one action to take today.
-        </p>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.78rem', letterSpacing: '0.2em', marginTop: '0.4rem' }}>
           CLARITY
         </p>
@@ -135,5 +132,6 @@ export default function Intake({ onNext }) {
     </div>
   );
 }
+
 
 
