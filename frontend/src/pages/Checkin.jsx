@@ -14,11 +14,13 @@ export default function Checkin({ onRestart }) {
     aiLoading, setAiLoading,
     awardPoints, resetDecision,
     getAchievements,
+    processStreak,
   } = useRemmyStore();
 
   const [result, setResult] = useState(null);
   const [showStats, setShowStats] = useState(false);
   const [showContinue, setShowContinue] = useState(false);
+  const [streakInfo, setStreakInfo] = useState(null);
   const requestIdRef = useRef(0);
 
   useEffect(() => {
@@ -38,9 +40,7 @@ export default function Checkin({ onRestart }) {
           'checkin',
           { gutChoice }
         );
-        if (isActive) {
-          setAiMessage(reply);
-        }
+        if (isActive) setAiMessage(reply);
       } finally {
         clearTimeout(fallbackTimer);
         if (isActive) {
@@ -64,9 +64,12 @@ export default function Checkin({ onRestart }) {
 
     if (r === 'yes') {
       awardPoints(100, 'Completed first action');
-      const { recoveryBonus, streakMessage, newStreak } = processStreak();
-      if (recoveryBonus > 0) {
-        awardPoints(recoveryBonus, 'Recovery bonus');
+
+      // Process streak + recovery XP
+      const streakResult = processStreak();
+      setStreakInfo(streakResult);
+      if (streakResult.recoveryBonus > 0) {
+        awardPoints(streakResult.recoveryBonus, 'Recovery bonus');
       }
     }
 
@@ -111,7 +114,7 @@ export default function Checkin({ onRestart }) {
         <div>
           <h2 style={{
             fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: '1.8rem', color: '#fff', letterSpacing: '0.05em'
+            fontSize: '1.8rem', color: '#fff', letterSpacing: '0.05em',
           }}>
             IMMEDIATE CHECK
           </h2>
@@ -165,6 +168,42 @@ export default function Checkin({ onRestart }) {
         </div>
       )}
 
+      {/* Streak feedback */}
+      {result === 'yes' && streakInfo && (
+        <div className="card fade-in" style={{
+          border: streakInfo.streakMessage === 'recovery'
+            ? '1px solid #47ff8a'
+            : '1px solid var(--border-yellow)',
+        }}>
+          {streakInfo.streakMessage === 'recovery' && (
+            <p style={{ color: '#47ff8a', fontSize: '0.85rem', margin: 0 }}>
+              🔄 Comeback! +25 Recovery XP — welcome back.
+            </p>
+          )}
+          {streakInfo.streakMessage === 'freeze_used' && (
+            <p style={{ color: 'var(--yellow)', fontSize: '0.85rem', margin: 0 }}>
+              🧊 Freeze token used — streak saved. {gamification.freezeTokens} left.
+            </p>
+          )}
+          {streakInfo.streakMessage === 'freeze_earned' && (
+            <p style={{ color: 'var(--yellow)', fontSize: '0.85rem', margin: 0 }}>
+              🧊 Freeze token earned! {gamification.freezeTokens} tokens banked.
+            </p>
+          )}
+          {!streakInfo.streakMessage && streakInfo.newStreak > 1 && (
+            <p style={{ color: 'var(--yellow)', fontSize: '0.85rem', margin: 0 }}>
+              🔥 {streakInfo.newStreak} day streak — keep going.
+            </p>
+          )}
+          {streakInfo.newStreak === 1 && !streakInfo.streakMessage && (
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
+              Streak started. Come back tomorrow.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Achievements */}
       {showStats && achievements.length > 0 && (
         <div className="card fade-in">
           <p style={{
