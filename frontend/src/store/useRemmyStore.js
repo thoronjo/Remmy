@@ -9,6 +9,9 @@ const INITIAL_GAMIFICATION = {
   streak: 0,
   achievements: [],
   totalDecisions: 0,
+  lastDecisionDate: null,  // ISO date string, tracks daily streak
+  freezeTokens: 0,         // streak freeze tokens
+  longestStreak: 0,        // personal best
 };
 
 const LEVELS = [
@@ -30,19 +33,29 @@ const ACHIEVEMENTS = [
   { id: 'eyes_open',       label: 'Eyes Open',       emoji: '👁️', condition: (s) => s.scaryChoices >= 5                 },
   { id: 'pattern_breaker', label: 'Pattern Breaker', emoji: '🧠', condition: (s) => s.gamification.totalDecisions >= 10 },
   { id: 'forged',          label: 'Forged',          emoji: '🏆', condition: (s) => s.gamification.level >= 7           },
+  { id: 'comeback',        label: 'Comeback Kid',    emoji: '🔄', condition: (s) => s.gamification.recoveryCount >= 1   },
+  { id: 'frozen_solid',    label: 'Frost Proof',     emoji: '🧊', condition: (s) => s.gamification.freezeTokens >= 3    },
 ];
 
 const getLevel = (cp) => {
   return [...LEVELS].reverse().find(l => cp >= l.minCP) || LEVELS[0];
 };
 
-// Generate a simple UUID for decisions
 const generateId = () => {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
     return v.toString(16);
   });
+};
+
+// Get today's date as YYYY-MM-DD string
+const toDateStr = (date = new Date()) => date.toISOString().split('T')[0];
+
+// Days between two YYYY-MM-DD strings
+const daysBetween = (a, b) => {
+  const msPerDay = 86400000;
+  return Math.round((new Date(b) - new Date(a)) / msPerDay);
 };
 
 const useRemmyStore = create(
@@ -69,7 +82,10 @@ const useRemmyStore = create(
       currentDecisionId: null,
 
       // Gamification
-      gamification: INITIAL_GAMIFICATION,
+      gamification: {
+        ...INITIAL_GAMIFICATION,
+        recoveryCount: 0,
+      },
       fastDecision: false,
       completedLock: false,
       resistedUnlocks: 0,
@@ -96,7 +112,88 @@ const useRemmyStore = create(
       setDecisionStartTime: (t) => set({ decisionStartTime: t }),
       setFastDecision: (v) => set({ fastDecision: v }),
 
-      // Save or update decision in Supabase
+      // ─── Streak logic ─────────────────────────────────────────────
+
+      // Call this when a decision is completed (checkin = yes)
+      processStreak: () => {
+        const state = get();
+        const current = state.gamification;
+        const today = toDateStr();
+        const last = current.lastDecisionDate;
+
+        let newStreak = current.streak;
+        let newFreezeTokens = current.freezeTokens;
+        let recoveryBonus = 0;
+        let newRecoveryCount = current.recoveryCount || 0;
+        let streakMessage = null;
+
+        if (!last) {
+          // First ever decision
+          newStreak = 1;
+        } else {
+          const gap = daysBetween(last, today);
+
+          if (gap === 0) {
+            // Already completed one today — no streak change
+          } else if (gap === 1) {
+            // Consecutive day — increment streak
+            newStreak = current.streak + 1;
+          } else if (gap === 2 && newFreezeTokens > 0) {
+            // Missed one day but has a freeze token — use it
+            newFreezeTokens = newFreezeTokens - 1;
+            newStreak = current.streak + 1;
+            streakMessage = 'freeze_used';
+          } else if (gap > 1) {
+            // Streak broken — check if recovering
+            if (current.streak > 0) {
+              // They had a streak and broke it — give recovery bonus
+              recoveryBonus = 25;
+              newRecoveryCount = newRecoveryCount + 1;
+              streakMessage = 'recovery';
+            }
+            newStreak = 1;
+          }
+        }
+
+        const newLongestStreak = Math.max(current.longestStreak || 0, newStreak);
+
+        // Award weekly freeze token (every 7-day streak milestone)
+        if (newStreak > 0 && newStreak % 7 === 0) {
+          newFreezeTokens = newFreezeTokens + 1;
+          streakMessage = streakMessage || 'freeze_earned';
+        }
+
+        set({
+          gamification: {
+            ...current,
+            streak: newStreak,
+            lastDecisionDate: today,
+            freezeTokens: newFreezeTokens,
+            longestStreak: newLongestStreak,
+            recoveryCount: newRecoveryCount,
+          },
+        });
+
+        return { recoveryBonus, streakMessage, newStreak };
+      },
+
+      // Use a freeze token manually
+      useFreezeToken: () => {
+        const state = get();
+        const { freezeTokens } = state.gamification;
+        if (freezeTokens <= 0) return false;
+
+        set({
+          gamification: {
+            ...state.gamification,
+            freezeTokens: freezeTokens - 1,
+          },
+        });
+        return true;
+      },
+
+      // ─── Supabase sync ────────────────────────────────────────────
+
       syncDecision: async () => {
         const user = useAuthStore.getState().user;
         if (!user) return;
@@ -126,7 +223,6 @@ const useRemmyStore = create(
         }
       },
 
-      // Called when checkin result is set
       setCheckinResult: async (checkinResult) => {
         set({ checkinResult });
 
@@ -142,13 +238,13 @@ const useRemmyStore = create(
         }
       },
 
-      // Award points and check achievements
+      // ─── Points + achievements ────────────────────────────────────
+
       awardPoints: (points, reason) => {
         const state = get();
         const current = state.gamification;
         const newCP = current.clarityPoints + points;
         const newLevel = getLevel(newCP);
-        const leveledUp = newLevel.level > current.level;
 
         const newTotalDecisions = reason === 'Created decision'
           ? current.totalDecisions + 1
@@ -178,7 +274,7 @@ const useRemmyStore = create(
           },
         });
 
-        return { leveledUp, newLevel, newAchievements, points };
+        return { leveledUp: newLevel.level > current.level, newLevel, newAchievements, points };
       },
 
       incrementStreak: () => {
@@ -207,6 +303,19 @@ const useRemmyStore = create(
           ...a,
           unlocked: gamification.achievements.includes(a.id),
         }));
+      },
+
+      // Personal bests summary
+      getPersonalBests: () => {
+        const { gamification } = get();
+        return {
+          longestStreak: gamification.longestStreak || 0,
+          totalDecisions: gamification.totalDecisions || 0,
+          freezeTokens: gamification.freezeTokens || 0,
+          recoveryCount: gamification.recoveryCount || 0,
+          clarityPoints: gamification.clarityPoints || 0,
+          level: gamification.level || 1,
+        };
       },
 
       resetDecision: () => set({

@@ -64,6 +64,10 @@ export default function Checkin({ onRestart }) {
 
     if (r === 'yes') {
       awardPoints(100, 'Completed first action');
+      const { recoveryBonus, streakMessage, newStreak } = processStreak();
+      if (recoveryBonus > 0) {
+        awardPoints(recoveryBonus, 'Recovery bonus');
+      }
     }
 
     setAiLoading(true);
