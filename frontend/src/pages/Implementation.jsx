@@ -129,7 +129,7 @@ export default function Implementation({ onNext }) {
             onClick={handleSubmit}
             disabled={!allFilled}
           >
-            SEAL THE PLAN ->
+            {'SEAL THE PLAN →'}
           </button>
         </div>
       )}
