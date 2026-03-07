@@ -42,6 +42,7 @@ export default function App() {
   const prevCPRef = useRef(null);
   const prevLevelRef = useRef(null);
   const prevAchievementsRef = useRef(null);
+  const hasSyncedHistoryRef = useRef(false);
 
   // Scroll to top on stage change
   useEffect(() => {
@@ -62,6 +63,11 @@ export default function App() {
 
   // Push browser history state on stage change
   useEffect(() => {
+    if (!hasSyncedHistoryRef.current) {
+      hasSyncedHistoryRef.current = true;
+      return;
+    }
+
     window.history.pushState({ stageIdx }, '', window.location.pathname);
   }, [stageIdx]);
 
@@ -352,3 +358,4 @@ export default function App() {
     </div>
   );
 }
+
