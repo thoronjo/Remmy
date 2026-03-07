@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { onAuthStateChange, signOut } from '../services/auth';
+import { supabase } from '../services/supabase';
+import { signOut } from '../services/auth';
 import { loadGamification, saveGamification } from '../services/db';
 import useRemmyStore from './useRemmyStore';
 
