@@ -190,9 +190,12 @@ export default function App() {
         position: 'sticky', top: 0, zIndex: 100,
       }}>
         {/* Logo */}
-        <div style={{
+        <div
+          onClick={goRestart} 
+          style={{
           fontFamily: "'Bebas Neue', sans-serif",
           fontSize: '1.6rem', color: 'var(--yellow)', letterSpacing: '0.1em',
+          cursor: 'pointer',
         }}>
           REMMY
         </div>
