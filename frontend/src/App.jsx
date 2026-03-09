@@ -16,6 +16,7 @@ import AchievementPopup from './components/AchievementPopup';
 import LevelUpOverlay from './components/LevelUpOverlay';
 import CPFlash from './components/CPFlash';
 import AuthModal from './components/AuthModal';
+import { initializeReminderScheduler, maybeFireDueReminder } from './services/reminders';
 
 const STAGES = [
   'intake', 'narrowing', 'gut_check', 'resistance',
@@ -54,6 +55,11 @@ export default function App() {
     const unsubscribe = initialize();
     return unsubscribe;
   }, [initialize]);
+
+  useEffect(() => {
+    initializeReminderScheduler();
+    maybeFireDueReminder();
+  }, []);
 
   // Sync gamification to Supabase when CP changes
   useEffect(() => {
@@ -374,6 +380,7 @@ export default function App() {
     </div>
   );
 }
+
 
 
 

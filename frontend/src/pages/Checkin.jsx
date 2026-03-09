@@ -3,16 +3,28 @@ import Remmy from '../components/Remmy';
 import AIMessage from '../components/AIMessage';
 import useRemmyStore from '../store/useRemmyStore';
 import { askRemmy } from '../services/api';
+import {
+  enableCheckinReminder,
+  getNotificationPermissionState,
+  requestReminderPermission,
+} from '../services/reminders';
 
 export default function Checkin({ onRestart }) {
   const {
-    gutChoice, firstAction, actionTime,
-    obstacle, obstacleIf, gamification,
+    gutChoice,
+    firstAction,
+    actionTime,
+    obstacle,
+    obstacleIf,
+    gamification,
     lockDays,
     setCheckinResult,
-    aiMessage, setAiMessage,
-    aiLoading, setAiLoading,
-    awardPoints, resetDecision,
+    aiMessage,
+    setAiMessage,
+    aiLoading,
+    setAiLoading,
+    awardPoints,
+    resetDecision,
     getAchievements,
     processStreak,
   } = useRemmyStore();
@@ -21,7 +33,16 @@ export default function Checkin({ onRestart }) {
   const [showStats, setShowStats] = useState(false);
   const [showContinue, setShowContinue] = useState(false);
   const [streakInfo, setStreakInfo] = useState(null);
+  const [reminderSupported, setReminderSupported] = useState(false);
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderMessage, setReminderMessage] = useState('');
   const requestIdRef = useRef(0);
+
+  useEffect(() => {
+    const permission = getNotificationPermissionState();
+    setReminderSupported(permission !== 'unsupported');
+    setReminderEnabled(permission === 'granted');
+  }, []);
 
   useEffect(() => {
     let isActive = true;
@@ -51,8 +72,41 @@ export default function Checkin({ onRestart }) {
     };
 
     load();
-    return () => { isActive = false; };
+    return () => {
+      isActive = false;
+    };
   }, [actionTime, firstAction, gutChoice, obstacle, obstacleIf, setAiLoading, setAiMessage]);
+
+  const handleEnableReminder = async () => {
+    setReminderMessage('');
+
+    const permission = await requestReminderPermission();
+    if (!permission.ok) {
+      setReminderEnabled(false);
+      setReminderMessage(permission.message);
+      return;
+    }
+
+    const reminderDate = new Date();
+    reminderDate.setDate(reminderDate.getDate() + 1);
+    reminderDate.setHours(9, 0, 0, 0);
+
+    const scheduled = enableCheckinReminder(reminderDate);
+    if (!scheduled.ok) {
+      setReminderMessage(scheduled.message);
+      return;
+    }
+
+    setReminderEnabled(true);
+    const when = scheduled.scheduledAt.toLocaleString(undefined, {
+      weekday: 'long',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    });
+    setReminderMessage(`Reminder set for ${when}.`);
+  };
 
   const handleResult = async (r) => {
     const requestId = requestIdRef.current + 1;
@@ -65,7 +119,6 @@ export default function Checkin({ onRestart }) {
     if (r === 'yes') {
       awardPoints(100, 'Completed first action');
 
-      // Process streak + recovery XP
       const streakResult = processStreak();
       setStreakInfo(streakResult);
       if (streakResult.recoveryBonus > 0) {
@@ -101,10 +154,14 @@ export default function Checkin({ onRestart }) {
     }
   };
 
-  const achievements = getAchievements().filter(a => a.unlocked);
+  const achievements = getAchievements().filter((a) => a.unlocked);
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowLabel = tomorrow.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+  const tomorrowLabel = tomorrow.toLocaleDateString(undefined, {
+    weekday: 'long',
+    month: 'short',
+    day: 'numeric',
+  });
 
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -115,51 +172,56 @@ export default function Checkin({ onRestart }) {
           mood={result === 'yes' ? 'zoomies' : result === 'no' ? 'judging' : 'alert'}
         />
         <div>
-          <h2 style={{
-            fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: '1.8rem', color: '#fff', letterSpacing: '0.05em',
-          }}>
+          <h2
+            style={{
+              fontFamily: "'Bebas Neue', sans-serif",
+              fontSize: '1.8rem',
+              color: '#fff',
+              letterSpacing: '0.05em',
+            }}
+          >
             IMMEDIATE CHECK
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-            No hiding. Did you do it?
-          </p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>No hiding. Did you do it?</p>
         </div>
       </div>
 
       <div className="card" style={{ fontSize: '0.85rem', color: 'var(--text-dim)', lineHeight: 1.6 }}>
-        <p style={{
-          fontSize: '0.65rem', color: 'var(--text-muted)',
-          letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 6,
-        }}>
+        <p
+          style={{
+            fontSize: '0.65rem',
+            color: 'var(--text-muted)',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            marginBottom: 6,
+          }}
+        >
           Your commitment
         </p>
-        <p><strong style={{ color: 'var(--yellow)' }}>{firstAction}</strong></p>
-        <p style={{ marginTop: 4, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-          Planned for: {actionTime}
+        <p>
+          <strong style={{ color: 'var(--yellow)' }}>{firstAction}</strong>
         </p>
+        <p style={{ marginTop: 4, fontSize: '0.78rem', color: 'var(--text-muted)' }}>Planned for: {actionTime}</p>
       </div>
 
       <AIMessage text={aiMessage} loading={aiLoading} />
 
-      {/* Continue without AI fallback */}
       {aiLoading && showContinue && (
         <button
           className="btn-secondary"
-          onClick={() => { setAiLoading(false); setShowContinue(false); }}
+          onClick={() => {
+            setAiLoading(false);
+            setShowContinue(false);
+          }}
           style={{ opacity: 0.7, fontSize: '0.8rem' }}
         >
-          Continue without Remmy's response â†’
+          Continue without Remmy's response {'->'}
         </button>
       )}
 
       {!aiLoading && !result && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <button
-            className="btn-primary"
-            onClick={() => handleResult('yes')}
-            style={{ background: 'var(--success)', color: '#0a0a0a' }}
-          >
+          <button className="btn-primary" onClick={() => handleResult('yes')} style={{ background: 'var(--success)', color: '#0a0a0a' }}>
             Yes, I did it
           </button>
           <button className="btn-secondary" onClick={() => handleResult('rescheduled')}>
@@ -171,75 +233,60 @@ export default function Checkin({ onRestart }) {
         </div>
       )}
 
-      {/* Streak feedback */}
       {result === 'yes' && streakInfo && (
-        <div className="card fade-in" style={{
-          border: streakInfo.streakMessage === 'recovery'
-            ? '1px solid #47ff8a'
-            : '1px solid var(--border-yellow)',
-        }}>
+        <div className="card fade-in" style={{ border: streakInfo.streakMessage === 'recovery' ? '1px solid #47ff8a' : '1px solid var(--border-yellow)' }}>
           {streakInfo.streakMessage === 'recovery' && (
-            <p style={{ color: '#47ff8a', fontSize: '0.85rem', margin: 0 }}>
-              ðŸ”„ Comeback! +25 Recovery XP â€” welcome back.
-            </p>
+            <p style={{ color: '#47ff8a', fontSize: '0.85rem', margin: 0 }}>Comeback! +25 Recovery XP. Welcome back.</p>
           )}
           {streakInfo.streakMessage === 'freeze_used' && (
-            <p style={{ color: 'var(--yellow)', fontSize: '0.85rem', margin: 0 }}>
-              ðŸ§Š Freeze token used â€” streak saved. {gamification.freezeTokens} left.
-            </p>
+            <p style={{ color: 'var(--yellow)', fontSize: '0.85rem', margin: 0 }}>Freeze token used. Streak saved. {gamification.freezeTokens} left.</p>
           )}
           {streakInfo.streakMessage === 'freeze_earned' && (
-            <p style={{ color: 'var(--yellow)', fontSize: '0.85rem', margin: 0 }}>
-              ðŸ§Š Freeze token earned! {gamification.freezeTokens} tokens banked.
-            </p>
+            <p style={{ color: 'var(--yellow)', fontSize: '0.85rem', margin: 0 }}>Freeze token earned. {gamification.freezeTokens} tokens banked.</p>
           )}
           {!streakInfo.streakMessage && streakInfo.newStreak > 1 && (
-            <p style={{ color: 'var(--yellow)', fontSize: '0.85rem', margin: 0 }}>
-              ðŸ”¥ {streakInfo.newStreak} day streak â€” keep going.
-            </p>
+            <p style={{ color: 'var(--yellow)', fontSize: '0.85rem', margin: 0 }}>{streakInfo.newStreak} day streak. Keep going.</p>
           )}
           {streakInfo.newStreak === 1 && !streakInfo.streakMessage && (
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
-              Streak started. Come back tomorrow.
-            </p>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>Streak started. Come back tomorrow.</p>
           )}
         </div>
       )}
 
-      {/* Return nudge */}
       {result && !aiLoading && (
         <div className="card fade-in" style={{ border: '1px solid rgba(71,255,138,0.35)' }}>
-          <p style={{
-            fontSize: '0.72rem',
-            color: 'var(--text-dim)',
-            letterSpacing: '0.12em',
-            textTransform: 'uppercase',
-            marginBottom: 8,
-          }}>
+          <p style={{ fontSize: '0.72rem', color: 'var(--text-dim)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>
             Momentum Reminder
           </p>
           <p style={{ color: '#fff', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>
             Come back on <strong style={{ color: 'var(--yellow)' }}>{tomorrowLabel}</strong> to protect your streak and keep your decision momentum alive.
           </p>
+
+          {reminderSupported ? (
+            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <button className="btn-secondary" onClick={handleEnableReminder}>
+                {reminderEnabled ? 'Reminder enabled' : 'Enable browser reminder'}
+              </button>
+              {reminderMessage && (
+                <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-dim)' }}>{reminderMessage}</p>
+              )}
+            </div>
+          ) : (
+            <p style={{ marginTop: 10, marginBottom: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+              Browser reminders are not supported on this device.
+            </p>
+          )}
         </div>
       )}
-      {/* Achievements */}
+
       {showStats && achievements.length > 0 && (
         <div className="card fade-in">
-          <p style={{
-            fontSize: '0.65rem', color: 'var(--text-muted)',
-            letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12,
-          }}>
+          <p style={{ fontSize: '0.65rem', color: 'var(--text-muted)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>
             Achievements Unlocked
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {achievements.map(a => (
-              <div key={a.id} className="pop-in tag" style={{
-                background: 'var(--yellow-dim)',
-                borderColor: 'var(--border-yellow)',
-                color: 'var(--yellow)',
-                fontSize: '0.85rem',
-              }}>
+            {achievements.map((a) => (
+              <div key={a.id} className="pop-in tag" style={{ background: 'var(--yellow-dim)', borderColor: 'var(--border-yellow)', color: 'var(--yellow)', fontSize: '0.85rem' }}>
                 {a.emoji} {a.label}
               </div>
             ))}
@@ -252,17 +299,29 @@ export default function Checkin({ onRestart }) {
           <button
             className="btn-secondary"
             style={{ flex: 1 }}
-            onClick={() => { resetDecision(); onRestart(); }}
+            onClick={() => {
+              resetDecision();
+              onRestart();
+            }}
           >
             New Decision
           </button>
-          <div style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'var(--yellow-dim)', border: '1px solid var(--border-yellow)',
-            borderRadius: 'var(--radius)', padding: '12px',
-            fontSize: '0.8rem', color: 'var(--yellow)', textAlign: 'center',
-          }}>
-            ðŸ”’ Locked: {lockDays} days
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'var(--yellow-dim)',
+              border: '1px solid var(--border-yellow)',
+              borderRadius: 'var(--radius)',
+              padding: '12px',
+              fontSize: '0.8rem',
+              color: 'var(--yellow)',
+              textAlign: 'center',
+            }}
+          >
+            Locked: {lockDays} days
           </div>
         </div>
       )}
