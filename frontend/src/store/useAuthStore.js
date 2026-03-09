@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+﻿import { create } from 'zustand';
 import { supabase } from '../services/supabase';
 import { signOut } from '../services/auth';
 import { loadGamification, saveGamification } from '../services/db';
@@ -83,8 +83,13 @@ const useAuthStore = create((set, get) => ({
   },
 
   logout: async () => {
-    await signOut();
-    set({ user: null });
+    try {
+      await signOut();
+    } catch (err) {
+      console.error('Sign out error:', err);
+    } finally {
+      set({ user: null, loading: false, initialized: true });
+    }
   },
 
   syncGamification: async () => {
@@ -101,3 +106,4 @@ const useAuthStore = create((set, get) => ({
 }));
 
 export default useAuthStore;
+

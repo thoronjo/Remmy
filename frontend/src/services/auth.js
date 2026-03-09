@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+﻿import { supabase } from './supabase';
 
 const getAllowedRedirects = () => {
   const raw = import.meta.env.VITE_AUTH_REDIRECT_ALLOWLIST || '';
@@ -51,7 +51,7 @@ export const signInWithGoogle = async () => {
 };
 
 export const signOut = async () => {
-  const { error } = await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut({ scope: 'local' });
   if (error) throw error;
 };
 
@@ -65,3 +65,4 @@ export const onAuthStateChange = (callback) => {
     callback(session?.user || null);
   });
 };
+
