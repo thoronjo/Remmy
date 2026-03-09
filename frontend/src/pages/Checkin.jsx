@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import Remmy from '../components/Remmy';
 import AIMessage from '../components/AIMessage';
 import useRemmyStore from '../store/useRemmyStore';
@@ -102,6 +102,9 @@ export default function Checkin({ onRestart }) {
   };
 
   const achievements = getAchievements().filter(a => a.unlocked);
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowLabel = tomorrow.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
 
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -146,7 +149,7 @@ export default function Checkin({ onRestart }) {
           onClick={() => { setAiLoading(false); setShowContinue(false); }}
           style={{ opacity: 0.7, fontSize: '0.8rem' }}
         >
-          Continue without Remmy's response →
+          Continue without Remmy's response â†’
         </button>
       )}
 
@@ -177,22 +180,22 @@ export default function Checkin({ onRestart }) {
         }}>
           {streakInfo.streakMessage === 'recovery' && (
             <p style={{ color: '#47ff8a', fontSize: '0.85rem', margin: 0 }}>
-              🔄 Comeback! +25 Recovery XP — welcome back.
+              ðŸ”„ Comeback! +25 Recovery XP â€” welcome back.
             </p>
           )}
           {streakInfo.streakMessage === 'freeze_used' && (
             <p style={{ color: 'var(--yellow)', fontSize: '0.85rem', margin: 0 }}>
-              🧊 Freeze token used — streak saved. {gamification.freezeTokens} left.
+              ðŸ§Š Freeze token used â€” streak saved. {gamification.freezeTokens} left.
             </p>
           )}
           {streakInfo.streakMessage === 'freeze_earned' && (
             <p style={{ color: 'var(--yellow)', fontSize: '0.85rem', margin: 0 }}>
-              🧊 Freeze token earned! {gamification.freezeTokens} tokens banked.
+              ðŸ§Š Freeze token earned! {gamification.freezeTokens} tokens banked.
             </p>
           )}
           {!streakInfo.streakMessage && streakInfo.newStreak > 1 && (
             <p style={{ color: 'var(--yellow)', fontSize: '0.85rem', margin: 0 }}>
-              🔥 {streakInfo.newStreak} day streak — keep going.
+              ðŸ”¥ {streakInfo.newStreak} day streak â€” keep going.
             </p>
           )}
           {streakInfo.newStreak === 1 && !streakInfo.streakMessage && (
@@ -203,6 +206,23 @@ export default function Checkin({ onRestart }) {
         </div>
       )}
 
+      {/* Return nudge */}
+      {result && !aiLoading && (
+        <div className="card fade-in" style={{ border: '1px solid rgba(71,255,138,0.35)' }}>
+          <p style={{
+            fontSize: '0.72rem',
+            color: 'var(--text-dim)',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            marginBottom: 8,
+          }}>
+            Momentum Reminder
+          </p>
+          <p style={{ color: '#fff', fontSize: '0.9rem', lineHeight: 1.6, margin: 0 }}>
+            Come back on <strong style={{ color: 'var(--yellow)' }}>{tomorrowLabel}</strong> to protect your streak and keep your decision momentum alive.
+          </p>
+        </div>
+      )}
       {/* Achievements */}
       {showStats && achievements.length > 0 && (
         <div className="card fade-in">
@@ -242,10 +262,11 @@ export default function Checkin({ onRestart }) {
             borderRadius: 'var(--radius)', padding: '12px',
             fontSize: '0.8rem', color: 'var(--yellow)', textAlign: 'center',
           }}>
-            🔒 Locked: {lockDays} days
+            ðŸ”’ Locked: {lockDays} days
           </div>
         </div>
       )}
     </div>
   );
 }
+
