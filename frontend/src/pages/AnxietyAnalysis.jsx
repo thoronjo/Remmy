@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect, useRef } from 'react';
 import Remmy from '../components/Remmy';
 import AIMessage from '../components/AIMessage';
 import useRemmyStore from '../store/useRemmyStore';
@@ -12,7 +12,11 @@ export default function AnxietyAnalysis({ onNext }) {
     awardPoints,
   } = useRemmyStore();
 
+  const didLoadRef = useRef(false);
+
   useEffect(() => {
+    if (didLoadRef.current) return;
+    didLoadRef.current = true;
     const load = async () => {
       setAiLoading(true);
       const reply = await askRemmy(
@@ -28,7 +32,7 @@ Separate rational concerns from anxiety masquerading as wisdom. Be surgical and 
       awardPoints(30, 'Faced fears');
     };
     load();
-  }, []);
+  }, [decision, fears, gutChoice, awardPoints, setAiLoading, setAiMessage]);
 
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -58,7 +62,7 @@ Separate rational concerns from anxiety masquerading as wisdom. Be surgical and 
 
       {!aiLoading && aiMessage && (
         <button className="btn-primary" onClick={onNext}>
-          I UNDERSTAND. SET MY DEADLINE →
+          I UNDERSTAND. SET MY DEADLINE â†’
         </button>
       )}
     </div>

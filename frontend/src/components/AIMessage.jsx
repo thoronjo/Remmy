@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 
 const LoadingDots = () => (
@@ -27,7 +27,6 @@ const generateTLDR = (text) => {
 };
 
 export default function AIMessage({ text, loading }) {
-  const [expanded, setExpanded] = useState(false);
   const [showFull, setShowFull] = useState(false);
 
   if (!loading && !text) return null;
@@ -48,7 +47,7 @@ export default function AIMessage({ text, loading }) {
     }}>
       {loading ? <LoadingDots /> : (
         <>
-          {/* TL;DR pill — only for long messages */}
+          {/* TL;DR pill â€” only for long messages */}
           {isLong && tldr && !showFull && (
             <div style={{ marginBottom: '1rem' }}>
               <div style={{
@@ -85,7 +84,7 @@ export default function AIMessage({ text, loading }) {
                   textTransform: 'uppercase',
                 }}
               >
-                Read full →
+                Read full â†’
               </button>
             </div>
           )}
@@ -123,7 +122,7 @@ export default function AIMessage({ text, loading }) {
                     padding: '4px 0',
                   }}
                 >
-                  ↑ Collapse
+                  â†‘ Collapse
                 </button>
               )}
             </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import Remmy from '../components/Remmy';
 import AIMessage from '../components/AIMessage';
 import useRemmyStore from '../store/useRemmyStore';
@@ -16,6 +16,7 @@ export default function Narrowing({ onNext }) {
 
   const [ready, setReady] = useState(false);
   const isBinary = options.length <= 2;
+  const didLoadRef = useRef(false);
 
   // Small delay to ensure component is fully mounted before firing AI
   useEffect(() => {
@@ -24,7 +25,8 @@ export default function Narrowing({ onNext }) {
   }, []);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || didLoadRef.current) return;
+    didLoadRef.current = true;
 
     if (isBinary) setRealOptions(options);
 
@@ -42,7 +44,7 @@ export default function Narrowing({ onNext }) {
       setAiLoading(false);
     };
     load();
-  }, [ready]);
+  }, [ready, daysStuck, decision, isBinary, options, setAiLoading, setAiMessage, setRealOptions]);
 
   const toggle = (opt) => {
     if (realOptions.includes(opt)) {
@@ -137,7 +139,7 @@ export default function Narrowing({ onNext }) {
                           letterSpacing: '0.08em',
                           opacity: 0.7
                         }}>
-                          {isReal ? 'REAL ✓' : 'tap to keep'}
+                          {isReal ? 'REAL âœ“' : 'tap to keep'}
                         </span>
                       </button>
                     );
@@ -165,7 +167,7 @@ export default function Narrowing({ onNext }) {
             onClick={handleNext}
             disabled={!isBinary && realOptions.length < 2}
           >
-            {isBinary ? 'START THE GUT CHECK →' : 'CUT THE REST →'}
+            {isBinary ? 'START THE GUT CHECK â†’' : 'CUT THE REST â†’'}
           </button>
         </>
       )}

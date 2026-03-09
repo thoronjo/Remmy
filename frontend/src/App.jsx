@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import useRemmyStore from './store/useRemmyStore';
 import useAuthStore from './store/useAuthStore';
 import ProgressBar from './components/ProgressBar';
@@ -32,7 +32,6 @@ export default function App() {
   const [currentAchievement, setCurrentAchievement] = useState(null);
   const [levelUpShow, setLevelUpShow] = useState(null);
   const [cpFlash, setCpFlash] = useState(null);
-  const [history, setHistory] = useState([0]);
   const [showAuth, setShowAuth] = useState(false);
 
   const clarityPoints = useRemmyStore(s => s.gamification.clarityPoints);
@@ -54,12 +53,12 @@ export default function App() {
   useEffect(() => {
     const unsubscribe = initialize();
     return unsubscribe;
-  }, []);
+  }, [initialize]);
 
   // Sync gamification to Supabase when CP changes
   useEffect(() => {
     if (user) syncGamification();
-  }, [clarityPoints, user]);
+  }, [clarityPoints, user, syncGamification]);
 
   // Push browser history state on stage change
   useEffect(() => {
@@ -69,7 +68,7 @@ export default function App() {
     }
 
     window.history.pushState({ stageIdx }, '', window.location.pathname);
-  }, [stageIdx]);
+  }, [stageIdx, setStage]);
 
   // Intercept browser back button
   useEffect(() => {
@@ -86,7 +85,7 @@ export default function App() {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [stageIdx]);
+  }, [stageIdx, setStage]);
 
   // CP flash
   useEffect(() => {
@@ -108,7 +107,9 @@ export default function App() {
       return;
     }
     if (level > prevLevelRef.current) {
-      setLevelUpShow(level);
+      const levelUpTimer = setTimeout(() => setLevelUpShow(level), 0);
+      prevLevelRef.current = level;
+      return () => clearTimeout(levelUpTimer);
     }
     prevLevelRef.current = level;
   }, [level]);
@@ -131,15 +132,17 @@ export default function App() {
   // Queue achievements one at a time
   useEffect(() => {
     if (!currentAchievement && pendingAchievements.length > 0) {
-      setCurrentAchievement(pendingAchievements[0]);
-      setPendingAchievements(q => q.slice(1));
+      const queueTimer = setTimeout(() => {
+        setCurrentAchievement(pendingAchievements[0]);
+        setPendingAchievements(q => q.slice(1));
+      }, 0);
+      return () => clearTimeout(queueTimer);
     }
   }, [pendingAchievements, currentAchievement]);
 
   const goNext = () => {
     const nextIdx = stageIdx + 1;
     if (nextIdx < STAGES.length) {
-      setHistory(h => [...h, nextIdx]);
       setStageIdx(nextIdx);
       setStage(STAGES[nextIdx]);
       setKey(k => k + 1);
@@ -155,7 +158,6 @@ export default function App() {
   };
 
   const goRestart = () => {
-    setHistory([0]);
     setStageIdx(0);
     setStage('intake');
     setKey(k => k + 1);
@@ -200,7 +202,7 @@ export default function App() {
           REMMY
         </div>
 
-        {/* Right side — gamification + auth */}
+        {/* Right side â€” gamification + auth */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
 
           {/* CP + level name */}
@@ -246,7 +248,7 @@ export default function App() {
               border: '1px solid var(--border-yellow)',
               borderRadius: 20, padding: '3px 10px',
             }}>
-              🔥 {gamification.streak}
+              ðŸ”¥ {gamification.streak}
             </div>
           )}
 
@@ -319,7 +321,7 @@ export default function App() {
               textTransform: 'uppercase',
             }}
           >
-            ← Back
+            â† Back
           </button>
         </div>
       )}
@@ -361,4 +363,5 @@ export default function App() {
     </div>
   );
 }
+
 

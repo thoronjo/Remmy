@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useState } from 'react';
 import Remmy from '../components/Remmy';
 import AIMessage from '../components/AIMessage';
 import Timer from '../components/Timer';
@@ -6,6 +6,7 @@ import useRemmyStore from '../store/useRemmyStore';
 import { askRemmy } from '../services/api';
 
 const OPTION_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+const nowMs = () => nowMs();
 
 export default function GutCheck({ onNext }) {
   const {
@@ -30,7 +31,7 @@ export default function GutCheck({ onNext }) {
     setPhase('response');
     setShowContinue(false);
 
-    if (decisionStartTime && (Date.now() - decisionStartTime) < 86400000) {
+    if (decisionStartTime && (nowMs() - decisionStartTime) < 86400000) {
       setFastDecision(true);
     }
     awardPoints(20, 'Completed gut check');
@@ -130,7 +131,7 @@ export default function GutCheck({ onNext }) {
           </div>
 
           <button className="btn-primary" onClick={startTimer}>
-            START THE CLOCK →
+            START THE CLOCK â†’
           </button>
         </div>
       )}
@@ -223,13 +224,13 @@ export default function GutCheck({ onNext }) {
               onClick={onNext}
               style={{ opacity: 0.7, fontSize: '0.8rem' }}
             >
-              Continue without Remmy's response →
+              Continue without Remmy's response â†’
             </button>
           )}
 
           {!aiLoading && aiMessage && (
             <button className="btn-primary" onClick={onNext}>
-              FACE MY FEARS →
+              FACE MY FEARS â†’
             </button>
           )}
         </div>

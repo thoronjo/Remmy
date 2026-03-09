@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+﻿import { useEffect, useRef } from 'react';
 import Remmy from '../components/Remmy';
 import AIMessage from '../components/AIMessage';
 import TagInput from '../components/TagInput';
@@ -13,11 +13,15 @@ export default function Resistance({ onNext }) {
     aiLoading, setAiLoading,
   } = useRemmyStore();
 
+  const didLoadRef = useRef(false);
+
   useEffect(() => {
+    if (didLoadRef.current) return;
+    didLoadRef.current = true;
     const load = async () => {
       setAiLoading(true);
       const reply = await askRemmy(
-        `User's gut said "${gutChoice}" for "${decision}". Challenge them: why aren't they trusting that? Ask them to brain-dump every single fear, doubt, and resistance — no filter.`,
+        `User's gut said "${gutChoice}" for "${decision}". Challenge them: why aren't they trusting that? Ask them to brain-dump every single fear, doubt, and resistance â€” no filter.`,
         'resistance',
         { decision, gutChoice }
       );
@@ -25,7 +29,7 @@ export default function Resistance({ onNext }) {
       setAiLoading(false);
     };
     load();
-  }, []);
+  }, [decision, gutChoice, setAiLoading, setAiMessage]);
 
   return (
     <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -72,7 +76,7 @@ export default function Resistance({ onNext }) {
             onClick={onNext}
             disabled={fears.length === 0}
           >
-            ANALYZE MY FEARS →
+            ANALYZE MY FEARS â†’
           </button>
 
           {fears.length === 0 && (

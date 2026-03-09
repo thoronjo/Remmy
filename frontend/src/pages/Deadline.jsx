@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useRef, useState } from 'react';
 import Remmy from '../components/Remmy';
 import AIMessage from '../components/AIMessage';
 import useRemmyStore from '../store/useRemmyStore';
@@ -24,6 +24,7 @@ export default function Deadline({ onNext }) {
   } = useRemmyStore();
 
   const [showAdjust, setShowAdjust] = useState(false);
+  const didLoadRef = useRef(false);
 
   const recommendation = useMemo(() => {
     const normalized = (daysStuck || '').toLowerCase();
@@ -40,6 +41,8 @@ export default function Deadline({ onNext }) {
   }, [daysStuck]);
 
   useEffect(() => {
+    if (didLoadRef.current) return;
+    didLoadRef.current = true;
     const load = async () => {
       setAiLoading(true);
       const reply = await askRemmy(
@@ -52,7 +55,7 @@ export default function Deadline({ onNext }) {
     };
 
     load();
-  }, []);
+  }, [decision, gutChoice, setAiLoading, setAiMessage]);
 
   const applyRecommendation = () => {
     setDeadlineDays(recommendation.deadline);
@@ -196,3 +199,4 @@ export default function Deadline({ onNext }) {
     </div>
   );
 }
+

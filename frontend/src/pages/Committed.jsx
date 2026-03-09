@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import Remmy from '../components/Remmy';
 import AIMessage from '../components/AIMessage';
 import useRemmyStore from '../store/useRemmyStore';
@@ -14,12 +14,15 @@ export default function Committed({ onNext }) {
   } = useRemmyStore();
 
   const [showCommit, setShowCommit] = useState(false);
+  const didLoadRef = useRef(false);
 
   useEffect(() => {
+    if (didLoadRef.current) return;
+    didLoadRef.current = true;
     const load = async () => {
       setAiLoading(true);
       const reply = await askRemmy(
-        `User is about to commit to "${gutChoice}" for "${decision}" with a ${deadlineDays}-day deadline and ${lockDays}-day lock. Make the weight of this feel real. Tell them what happens when they click commit — decision is locked, no going back for ${lockDays} days. Be direct and powerful.`,
+        `User is about to commit to "${gutChoice}" for "${decision}" with a ${deadlineDays}-day deadline and ${lockDays}-day lock. Make the weight of this feel real. Tell them what happens when they click commit â€” decision is locked, no going back for ${lockDays} days. Be direct and powerful.`,
         'committed',
         { decision, gutChoice }
       );
@@ -28,7 +31,7 @@ export default function Committed({ onNext }) {
       setShowCommit(true);
     };
     load();
-  }, []);
+  }, [decision, gutChoice, deadlineDays, lockDays, setAiLoading, setAiMessage]);
 
   const handleCommit = () => {
     setLocked(true);
@@ -66,7 +69,7 @@ export default function Committed({ onNext }) {
           {gutChoice}
         </p>
         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 8 }}>
-          Locked for {lockDays} days · No reconsidering
+          Locked for {lockDays} days Â· No reconsidering
         </p>
       </div>
 
@@ -79,7 +82,7 @@ export default function Committed({ onNext }) {
             onClick={handleCommit}
             style={{ fontSize: '1.1rem', padding: '18px', letterSpacing: '0.08em' }}
           >
-            🔒 I COMMIT. LOCK IT.
+            ðŸ”’ I COMMIT. LOCK IT.
           </button>
           <p style={{ textAlign: 'center', fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 10 }}>
             This cannot be undone for {lockDays} days.

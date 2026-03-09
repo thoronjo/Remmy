@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 
 const LEVEL_NAMES = [
   '', 'Frozen', 'Stirring', 'Deciding', 'Acting', 'Committed', 'Forging', 'Resolved'
@@ -28,7 +28,7 @@ export default function LevelUpOverlay({ level, onDone }) {
       clearTimeout(t2);
       clearTimeout(t3);
     };
-  }, [level]);
+  }, [level, onDone]);
 
   if (!level) return null;
 

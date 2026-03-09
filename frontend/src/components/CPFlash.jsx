@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 
 export default function CPFlash({ amount, label, onDone }) {
   const [visible, setVisible] = useState(false);
@@ -12,7 +12,7 @@ export default function CPFlash({ amount, label, onDone }) {
       setVisible(false);
       setTimeout(onDone, 300);
     }, 1500);
-  }, [amount]);
+  }, [amount, onDone]);
 
   if (!amount) return null;
 

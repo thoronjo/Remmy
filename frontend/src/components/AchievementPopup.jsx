@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 
 const ACHIEVEMENT_META = {
-  first_strike:    { icon: '⚡', name: 'First Strike',    desc: 'Made your first decision' },
-  lightning:       { icon: '🌩️', name: 'Lightning',       desc: 'Decided in under 24 hours' },
-  vault:           { icon: '🔒', name: 'Vault',           desc: 'Completed a full lock period' },
-  ironwill:        { icon: '🪨', name: 'Iron Will',       desc: 'Resisted unlocking 3 times' },
-  on_fire:         { icon: '🔥', name: 'On Fire',         desc: '5 decision streak' },
-  eyes_open:       { icon: '👁️', name: 'Eyes Open',       desc: 'Faced 5 scary choices' },
-  pattern_breaker: { icon: '💥', name: 'Pattern Breaker', desc: '10 decisions completed' },
-  forged:          { icon: '👑', name: 'Forged',          desc: 'Reached Level 7 — Resolved' },
+  first_strike:    { icon: 'âš¡', name: 'First Strike',    desc: 'Made your first decision' },
+  lightning:       { icon: 'ðŸŒ©ï¸', name: 'Lightning',       desc: 'Decided in under 24 hours' },
+  vault:           { icon: 'ðŸ”’', name: 'Vault',           desc: 'Completed a full lock period' },
+  ironwill:        { icon: 'ðŸª¨', name: 'Iron Will',       desc: 'Resisted unlocking 3 times' },
+  on_fire:         { icon: 'ðŸ”¥', name: 'On Fire',         desc: '5 decision streak' },
+  eyes_open:       { icon: 'ðŸ‘ï¸', name: 'Eyes Open',       desc: 'Faced 5 scary choices' },
+  pattern_breaker: { icon: 'ðŸ’¥', name: 'Pattern Breaker', desc: '10 decisions completed' },
+  forged:          { icon: 'ðŸ‘‘', name: 'Forged',          desc: 'Reached Level 7 â€” Resolved' },
 };
 
 export default function AchievementPopup({ achievement, onDone }) {
@@ -23,7 +23,7 @@ export default function AchievementPopup({ achievement, onDone }) {
       setVisible(false);
       setTimeout(onDone, 400);
     }, 3500);
-  }, [achievement]);
+  }, [achievement, onDone]);
 
   if (!achievement) return null;
   const meta = ACHIEVEMENT_META[achievement];

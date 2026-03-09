@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 
 export default function Timer({ seconds, onEnd }) {
   const [left, setLeft] = useState(seconds);
 
   useEffect(() => {
-    setLeft(seconds);
 
     const iv = setInterval(() => {
       setLeft((current) => {
@@ -52,3 +51,4 @@ export default function Timer({ seconds, onEnd }) {
     </div>
   );
 }
+
