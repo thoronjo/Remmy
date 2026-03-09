@@ -105,6 +105,8 @@ npm run dev
 ### Backend (`backend/.env`)
 
 - `ANTHROPIC_API_KEY`: required; Anthropic API key
+- `SUPABASE_URL`: required; Supabase project URL for token verification
+- `SUPABASE_ANON_KEY`: required; Supabase anon key for auth verification requests
 - `PORT`: backend port (default `3001`)
 - `NODE_ENV`: `development` or `production`
 - `ALLOWED_ORIGINS`: comma-separated exact origins (production should include only your live domain(s), no wildcards)
@@ -113,6 +115,8 @@ Example:
 
 ```env
 ANTHROPIC_API_KEY=your_real_key
+SUPABASE_URL=https://your-project-ref.supabase.co
+SUPABASE_ANON_KEY=your_supabase_anon_key
 PORT=3001
 NODE_ENV=development
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:4173
@@ -149,7 +153,7 @@ Base URL: `http://localhost:3001`
 
 ### AI Chat
 
-- `POST /api/ai/chat`
+- `POST /api/ai/chat` (requires `Authorization: Bearer <supabase_access_token>`)
 - Content-Type: `application/json`
 
 Request body:
@@ -247,6 +251,8 @@ npm test
 ## License
 
 Current project license is `ISC` (see `backend/package.json`).
+
+
 
 
 

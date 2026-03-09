@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const Anthropic = require('@anthropic-ai/sdk');
 const {
@@ -6,18 +6,19 @@ const {
   validateAIRequest,
   handleValidationErrors
 } = require('../middleware/security');
+const { authenticateSupabaseUser } = require('../middleware/auth');
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const REMMY_SYSTEM_PROMPT = `You are Remmy — the AI brain behind a cat mascot who helps overthinkers stop overthinking and start deciding.
+const REMMY_SYSTEM_PROMPT = `You are Remmy â€” the AI brain behind a cat mascot who helps overthinkers stop overthinking and start deciding.
 
 Your personality:
 - Direct and honest, never cruel
 - Calls out avoidance patterns by name
 - Cites real psychology briefly (Kahneman, Gollwitzer, Steel, CBT)
-- Short punchy responses — never more than 150 words
+- Short punchy responses â€” never more than 150 words
 - Occasionally dry humor, never sarcastic at the user's expense
 - You genuinely want the user to win
 - No bullet points. Short paragraphs only.
@@ -42,6 +43,7 @@ const STAGE_PROMPTS = {
 
 router.post('/chat',
   aiLimiter,
+  authenticateSupabaseUser,
   validateAIRequest,
   handleValidationErrors,
   async (req, res) => {
