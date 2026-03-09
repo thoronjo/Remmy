@@ -1,4 +1,4 @@
-const DEFAULT_ALLOWED_ORIGINS = [
+﻿const DEFAULT_ALLOWED_ORIGINS = [
   'https://remmy-pi.vercel.app',
   'http://localhost:5173',
   'http://localhost:4173',
@@ -56,7 +56,9 @@ const createCorsOptions = () => {
         return;
       }
 
-      console.log('CORS blocked origin:', origin);
+      if (process.env.NODE_ENV !== 'production') {
+        process.stderr.write(`CORS blocked origin: ${origin}\n`);
+      }
       callback(new Error('Not allowed by CORS'));
     },
     methods: ['GET', 'POST', 'OPTIONS'],

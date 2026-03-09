@@ -1,4 +1,4 @@
-require('dotenv').config();
+﻿require('dotenv').config();
 const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
@@ -38,6 +38,8 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Remmy backend running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV}`);
+  if (process.env.NODE_ENV !== 'production') {
+    process.stdout.write(`Remmy backend running on port ${PORT}\n`);
+    process.stdout.write(`Environment: ${process.env.NODE_ENV}\n`);
+  }
 });

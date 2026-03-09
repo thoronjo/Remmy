@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -17,7 +17,7 @@
     <meta name="keywords" content="decision making, overthinking, productivity, AI, mental health" />
 
     <!-- Open Graph -->
-    <meta property="og:title" content="Remmy — Stop Overthinking" />
+    <meta property="og:title" content="Remmy â€” Stop Overthinking" />
     <meta property="og:description" content="The AI that helps you stop overthinking and start deciding." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://remmyai.app" />
@@ -26,7 +26,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-96.png" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
 
-    <title>Remmy — Stop Overthinking</title>
+    <title>Remmy â€” Stop Overthinking</title>
   </head>
   <body>
     <div id="root"></div>
@@ -36,9 +36,7 @@
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(() => console.log('Remmy SW registered'))
-            .catch((err) => console.log('SW registration failed:', err));
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
         });
       }
     </script>
