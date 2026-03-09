@@ -1,11 +1,6 @@
-﻿const DEFAULT_ALLOWED_ORIGINS = [
-  'https://remmy-pi.vercel.app',
+﻿const DEV_ALLOWED_ORIGINS = [
   'http://localhost:5173',
   'http://localhost:4173',
-];
-
-const DEFAULT_ALLOWED_PATTERNS = [
-  /^https:\/\/remmy.*\.vercel\.app$/,
 ];
 
 const parseCsv = (value) =>
@@ -30,10 +25,19 @@ const parseRegexCsv = (value) => {
 const getCorsConfig = () => {
   const envOrigins = parseCsv(process.env.ALLOWED_ORIGINS);
   const envPatterns = parseRegexCsv(process.env.ALLOWED_ORIGIN_PATTERNS);
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  if (isProduction) {
+    return {
+      allowedOrigins: envOrigins,
+      // Security baseline: production must use exact allow-list only.
+      allowedPatterns: [],
+    };
+  }
 
   return {
-    allowedOrigins: envOrigins.length > 0 ? envOrigins : DEFAULT_ALLOWED_ORIGINS,
-    allowedPatterns: envPatterns.length > 0 ? envPatterns : DEFAULT_ALLOWED_PATTERNS,
+    allowedOrigins: envOrigins.length > 0 ? envOrigins : DEV_ALLOWED_ORIGINS,
+    allowedPatterns: envPatterns,
   };
 };
 

@@ -1,4 +1,4 @@
-# Remmy
+﻿# Remmy
 
 Remmy is a full-stack AI decision-coaching app designed to help users move from analysis paralysis to committed action.
 
@@ -107,8 +107,7 @@ npm run dev
 - `ANTHROPIC_API_KEY`: required; Anthropic API key
 - `PORT`: backend port (default `3001`)
 - `NODE_ENV`: `development` or `production`
-- `ALLOWED_ORIGINS`: comma-separated exact origins
-- `ALLOWED_ORIGIN_PATTERNS`: comma-separated regex patterns for allowed origins
+- `ALLOWED_ORIGINS`: comma-separated exact origins (production should include only your live domain(s), no wildcards)
 
 Example:
 
@@ -116,8 +115,7 @@ Example:
 ANTHROPIC_API_KEY=your_real_key
 PORT=3001
 NODE_ENV=development
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:4173,https://remmy-pi.vercel.app
-ALLOWED_ORIGIN_PATTERNS=^https://remmy.*\.vercel\.app$
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:4173
 ```
 
 ### Frontend (`frontend/.env`)
@@ -229,7 +227,7 @@ npm test
 
 ## Deployment Notes
 
-- Frontend can be deployed to Vercel (configured origins already include Vercel URLs)
+- Frontend can be deployed to Vercel
 - Backend can run on any Node host (Procfile included)
 - Ensure backend env vars are set in your deployment platform
 - Set frontend `VITE_API_URL` to your deployed backend URL
@@ -239,7 +237,7 @@ npm test
 - `401/403` from AI route:
   - Check `ANTHROPIC_API_KEY`
 - CORS errors:
-  - Verify `ALLOWED_ORIGINS` and `ALLOWED_ORIGIN_PATTERNS`
+  - Verify `ALLOWED_ORIGINS` contains the exact frontend origin for the current environment
 - `429` responses:
   - You hit rate limits; wait and retry
 - Frontend cannot reach backend:
@@ -249,3 +247,7 @@ npm test
 ## License
 
 Current project license is `ISC` (see `backend/package.json`).
+
+
+
+
