@@ -49,19 +49,10 @@ body::after {
   z-index: -1;
 }
 
-/* Warp streaks */
+/* Subtle space glow */
 body::before {
-  background:
-    radial-gradient(circle at 50% 64%, rgba(80, 210, 255, 0.16) 0, rgba(80, 210, 255, 0.1) 10%, rgba(0, 0, 0, 0) 34%),
-    repeating-conic-gradient(
-      from 0deg at 50% 64%,
-      rgba(90, 210, 255, 0.42) 0deg 0.5deg,
-      rgba(0, 0, 0, 0) 0.5deg 2.8deg
-    );
-  filter: blur(1.2px) saturate(130%);
-  opacity: 0.72;
-  transform-origin: 50% 64%;
-  animation: warpSpin 42s linear infinite;
+  background: radial-gradient(circle at 50% 64%, rgba(80, 210, 255, 0.08) 0%, rgba(0, 0, 0, 0) 42%);
+  opacity: 0.6;
 }
 
 /* Star dust */
@@ -218,13 +209,6 @@ textarea { resize: vertical; }
   100% { transform: translateX(0) rotate(0deg); }
 }
 
-
-@keyframes warpSpin {
-  from { transform: rotate(0deg) scale(1); }
-  50%  { transform: rotate(180deg) scale(1.04); }
-  to   { transform: rotate(360deg) scale(1); }
-}
-
 @keyframes starDrift {
   from { transform: translate3d(0, 0, 0); }
   to   { transform: translate3d(-54px, -72px, 0); }
@@ -321,5 +305,9 @@ textarea { resize: vertical; }
 }
 
 .tag button:hover { color: var(--danger); }
+
+
+
+
 
 
