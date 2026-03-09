@@ -7,11 +7,11 @@
   --bg: #080808;
   --bg-2: #0f0f0f;
   --bg-3: #1a1a1a;
-  --border: rgba(180, 205, 235, 0.24);
+  --border: rgba(180, 205, 235, 0.32);
   --border-yellow: rgba(232, 255, 71, 0.3);
   --text: #eef4ff;
-  --text-dim: #b2c1d9;
-  --text-muted: #7f93ad;
+  --text-dim: #c8d5e8;
+  --text-muted: #a6b7cd;
   --danger: #ff6b6b;
   --success: #47ff8a;
   --radius: 12px;
@@ -68,7 +68,7 @@ body::after {
     radial-gradient(circle at 90% 76%, rgba(160, 225, 255, 0.72) 0 1.2px, transparent 1.35px);
   background-size: 220px 220px, 260px 260px, 240px 240px, 320px 320px, 300px 300px, 340px 340px, 280px 280px, 360px 360px;
   mix-blend-mode: screen;
-  opacity: 0.56;
+  opacity: 0.42;
   animation: starDrift 28s linear infinite;
 }
 
@@ -251,7 +251,7 @@ textarea { resize: vertical; }
   border-radius: var(--radius);
   cursor: pointer;
   transition: all 0.15s;
-  color: var(--text-dim);
+  color: var(--text);
   font-size: 0.9rem;
   text-align: left;
   width: 100%;
@@ -287,7 +287,7 @@ textarea { resize: vertical; }
   border-radius: 6px;
   padding: 5px 10px;
   font-size: 0.8rem;
-  color: var(--text-dim);
+  color: var(--text);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -305,6 +305,8 @@ textarea { resize: vertical; }
 }
 
 .tag button:hover { color: var(--danger); }
+
+
 
 
 
