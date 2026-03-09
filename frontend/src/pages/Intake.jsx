@@ -3,15 +3,22 @@ import Remmy from '../components/Remmy';
 import TagInput from '../components/TagInput';
 import AIMessage from '../components/AIMessage';
 import useRemmyStore from '../store/useRemmyStore';
+import useAuthStore from '../store/useAuthStore';
 import { askRemmy } from '../services/api';
 
 export default function Intake({ onNext }) {
+  const { user } = useAuthStore();
   const {
-    decision, setDecision,
-    options, setOptions,
-    daysStuck, setDaysStuck,
-    aiMessage, setAiMessage,
-    aiLoading, setAiLoading,
+    decision,
+    setDecision,
+    options,
+    setOptions,
+    daysStuck,
+    setDaysStuck,
+    aiMessage,
+    setAiMessage,
+    aiLoading,
+    setAiLoading,
     gamification,
     getLevelInfo,
     setDecisionStartTime,
@@ -34,7 +41,7 @@ export default function Intake({ onNext }) {
     awardPoints(10, 'Created decision');
 
     // Save to Supabase if logged in
-    syncDecision().catch(err => console.error('Sync failed:', err));
+    syncDecision().catch((err) => console.error('Sync failed:', err));
 
     setAiLoading(true);
     setAiMessage('');
@@ -63,16 +70,20 @@ export default function Intake({ onNext }) {
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.1rem' }}>
           <Remmy stage="intake" level={gamification.level} />
         </div>
-        <h1 style={{
-          fontFamily: "'Bebas Neue', sans-serif",
-          fontSize: 'clamp(2.2rem, 8vw, 3.8rem)',
-          color: '#fff',
-          lineHeight: 0.95,
-          marginBottom: '0.75rem',
-          textShadow: '0 2px 12px rgba(0,0,0,0.45)',
-        }}>
-          TURN INDECISION<br />
-          INTO A <span style={{ color: 'var(--yellow)' }}>CLEAR NEXT STEP</span><br />
+        <h1
+          style={{
+            fontFamily: "'Bebas Neue', sans-serif",
+            fontSize: 'clamp(2.2rem, 8vw, 3.8rem)',
+            color: '#fff',
+            lineHeight: 0.95,
+            marginBottom: '0.75rem',
+            textShadow: '0 2px 12px rgba(0,0,0,0.45)',
+          }}
+        >
+          TURN INDECISION
+          <br />
+          INTO A <span style={{ color: 'var(--yellow)' }}>CLEAR NEXT STEP</span>
+          <br />
           IN SECONDS
         </h1>
         <p style={{ color: 'var(--text-dim)', fontSize: '0.82rem', letterSpacing: '0.18em', marginTop: '0.45rem' }}>
@@ -83,26 +94,28 @@ export default function Intake({ onNext }) {
         </p>
       </div>
 
-      {/* Engagement strip */}
-      <div className="card" style={{ padding: '0.9rem 1rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.7rem' }}>
-          <div style={{ background: 'rgba(10,20,36,0.72)', border: '1px solid var(--border)', borderRadius: 10, padding: '0.55rem 0.6rem' }}>
-            <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Streak</div>
-            <div style={{ fontSize: '0.95rem', color: '#fff', marginTop: 2 }}>{gamification.streak || 0} day{(gamification.streak || 0) === 1 ? '' : 's'}</div>
+      {/* Engagement strip (signed-in users only) */}
+      {user && (
+        <div className="card" style={{ padding: '0.9rem 1rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '0.7rem' }}>
+            <div style={{ background: 'rgba(10,20,36,0.72)', border: '1px solid var(--border)', borderRadius: 10, padding: '0.55rem 0.6rem' }}>
+              <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Streak</div>
+              <div style={{ fontSize: '0.95rem', color: '#fff', marginTop: 2 }}>{gamification.streak || 0} day{(gamification.streak || 0) === 1 ? '' : 's'}</div>
+            </div>
+            <div style={{ background: 'rgba(10,20,36,0.72)', border: '1px solid var(--border)', borderRadius: 10, padding: '0.55rem 0.6rem' }}>
+              <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Progress</div>
+              <div style={{ fontSize: '0.95rem', color: '#fff', marginTop: 2 }}>{progressPct}% to next level</div>
+            </div>
+            <div style={{ background: 'rgba(10,20,36,0.72)', border: '1px solid var(--border)', borderRadius: 10, padding: '0.55rem 0.6rem' }}>
+              <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Next Level</div>
+              <div style={{ fontSize: '0.95rem', color: '#fff', marginTop: 2 }}>{cpToNext} CP left</div>
+            </div>
           </div>
-          <div style={{ background: 'rgba(10,20,36,0.72)', border: '1px solid var(--border)', borderRadius: 10, padding: '0.55rem 0.6rem' }}>
-            <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Progress</div>
-            <div style={{ fontSize: '0.95rem', color: '#fff', marginTop: 2 }}>{progressPct}% to next level</div>
-          </div>
-          <div style={{ background: 'rgba(10,20,36,0.72)', border: '1px solid var(--border)', borderRadius: 10, padding: '0.55rem 0.6rem' }}>
-            <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Next Level</div>
-            <div style={{ fontSize: '0.95rem', color: '#fff', marginTop: 2 }}>{cpToNext} CP left</div>
-          </div>
+          <p style={{ marginTop: '0.65rem', fontSize: '0.78rem', color: 'var(--text-dim)', lineHeight: 1.5 }}>
+            Small wins compound. Finish this decision cycle and keep your momentum alive.
+          </p>
         </div>
-        <p style={{ marginTop: '0.65rem', fontSize: '0.78rem', color: 'var(--text-dim)', lineHeight: 1.5 }}>
-          Small wins compound. Finish this decision cycle and keep your momentum alive.
-        </p>
-      </div>
+      )}
 
       {/* Form */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -110,7 +123,7 @@ export default function Intake({ onNext }) {
           <label className="label">WHAT'S ON YOUR MIND</label>
           <textarea
             value={decision}
-            onChange={e => setDecision(e.target.value.slice(0, 500))}
+            onChange={(e) => setDecision(e.target.value.slice(0, 500))}
             placeholder="e.g. I can't decide whether to quit my job and go all-in on my startup"
             rows={2}
             maxLength={500}
@@ -123,8 +136,8 @@ export default function Intake({ onNext }) {
             placeholder="Type an option and press Enter..."
             addLabel="Add"
             tags={options}
-            onAdd={opt => options.length < 8 && setOptions([...options, opt])}
-            onRemove={i => setOptions(options.filter((_, idx) => idx !== i))}
+            onAdd={(opt) => options.length < 8 && setOptions([...options, opt])}
+            onRemove={(i) => setOptions(options.filter((_, idx) => idx !== i))}
             maxTags={8}
           />
         </div>
@@ -132,7 +145,7 @@ export default function Intake({ onNext }) {
         <div>
           <label className="label">HOW LONG HAVE YOU BEEN STUCK?</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-            {['A few days', '1-2 weeks', '1 month', '3+ months', 'Over a year'].map(d => (
+            {['A few days', '1-2 weeks', '1 month', '3+ months', 'Over a year'].map((d) => (
               <button
                 key={d}
                 onClick={() => setDaysStuck(d)}
@@ -159,40 +172,42 @@ export default function Intake({ onNext }) {
       {aiLoading && showContinue && (
         <button
           className="btn-secondary"
-          onClick={() => { setAiLoading(false); setShowContinue(false); onNext(); }}
+          onClick={() => {
+            setAiLoading(false);
+            setShowContinue(false);
+            onNext();
+          }}
           style={{ fontSize: '0.84rem' }}
         >
-          Continue without Remmy's response →
+          Continue without Remmy's response -&gt;
         </button>
       )}
 
       {/* CTA */}
       {!aiMessage && !aiLoading && (
-        <button
-          className="btn-primary"
-          onClick={handleStart}
-          disabled={!decision.trim() || options.length < 2}
-        >
-          STOP OVERTHINKING →
+        <button className="btn-primary" onClick={handleStart} disabled={!decision.trim() || options.length < 2}>
+          STOP OVERTHINKING -&gt;
         </button>
       )}
 
       {canProceed && (
         <button className="btn-primary" onClick={onNext}>
-          LET'S GO →
+          LET'S GO -&gt;
         </button>
       )}
 
       {/* Info */}
       <div className="card" style={{ fontSize: '0.84rem', color: 'var(--text-dim)', lineHeight: 1.7 }}>
-        <p style={{
-          fontSize: '0.75rem',
-          fontWeight: 600,
-          letterSpacing: '0.12em',
-          textTransform: 'uppercase',
-          color: 'var(--text-dim)',
-          marginBottom: 8,
-        }}>
+        <p
+          style={{
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: 'var(--text-dim)',
+            marginBottom: 8,
+          }}
+        >
           What happens next
         </p>
         Eliminate fake options. Then a 60-second gut check, translate your fears, set a deadline, lock your decision, build a first action plan, and finish with accountability check-in.

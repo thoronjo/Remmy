@@ -1,4 +1,4 @@
-const CACHE_NAME = 'remmy-v1';
+﻿const CACHE_NAME = 'remmy-v2';
 
 const STATIC_ASSETS = [
   '/',
@@ -6,7 +6,7 @@ const STATIC_ASSETS = [
   '/manifest.json',
 ];
 
-// Install — cache static assets
+// Install â€” cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -16,7 +16,7 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate — clean old caches
+// Activate â€” clean old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -30,7 +30,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch — network first, fallback to cache
+// Fetch â€” network first, fallback to cache
 self.addEventListener('fetch', (event) => {
   // Never cache API calls to backend
   if (event.request.url.includes('/api/')) {
@@ -53,7 +53,7 @@ self.addEventListener('fetch', (event) => {
         return response;
       })
       .catch(() => {
-        // Network failed — serve from cache
+        // Network failed â€” serve from cache
         return caches.match(event.request).then((cached) => {
           if (cached) return cached;
           // Fallback to index.html for navigation requests
