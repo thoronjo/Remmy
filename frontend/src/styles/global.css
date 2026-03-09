@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+﻿@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap');
 
 :root {
   --yellow: #E8FF47;
@@ -30,11 +30,55 @@ html, body, #root {
 }
 
 body {
-  background: var(--bg);
+  background:
+    radial-gradient(circle at 50% 64%, rgba(0, 166, 255, 0.2) 0%, rgba(0, 166, 255, 0.08) 12%, rgba(0, 0, 0, 0) 34%),
+    radial-gradient(circle at 50% 64%, #05080f 0%, #04060c 26%, #020309 56%, #010106 100%);
   color: var(--text);
   font-family: 'DM Mono', 'Fira Code', monospace;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  position: relative;
+}
+
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  inset: -25vmax;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Warp streaks */
+body::before {
+  background:
+    radial-gradient(circle at 50% 64%, rgba(80, 210, 255, 0.16) 0, rgba(80, 210, 255, 0.1) 10%, rgba(0, 0, 0, 0) 34%),
+    repeating-conic-gradient(
+      from 0deg at 50% 64%,
+      rgba(90, 210, 255, 0.42) 0deg 0.5deg,
+      rgba(0, 0, 0, 0) 0.5deg 2.8deg
+    );
+  filter: blur(1.2px) saturate(130%);
+  opacity: 0.72;
+  transform-origin: 50% 64%;
+  animation: warpSpin 42s linear infinite;
+}
+
+/* Star dust */
+body::after {
+  background:
+    radial-gradient(circle at 11% 18%, rgba(255, 255, 255, 0.9) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 21% 72%, rgba(180, 230, 255, 0.72) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 36% 31%, rgba(255, 255, 255, 0.84) 0 1.1px, transparent 1.3px),
+    radial-gradient(circle at 44% 83%, rgba(130, 210, 255, 0.66) 0 1.2px, transparent 1.35px),
+    radial-gradient(circle at 58% 20%, rgba(255, 255, 255, 0.86) 0 1.1px, transparent 1.3px),
+    radial-gradient(circle at 72% 63%, rgba(190, 240, 255, 0.74) 0 1.2px, transparent 1.35px),
+    radial-gradient(circle at 84% 24%, rgba(255, 255, 255, 0.88) 0 1px, transparent 1.2px),
+    radial-gradient(circle at 90% 76%, rgba(160, 225, 255, 0.72) 0 1.2px, transparent 1.35px);
+  background-size: 220px 220px, 260px 260px, 240px 240px, 320px 320px, 300px 300px, 340px 340px, 280px 280px, 360px 360px;
+  mix-blend-mode: screen;
+  opacity: 0.86;
+  animation: starDrift 28s linear infinite;
 }
 
 /* Scrollbar */
@@ -174,6 +218,24 @@ textarea { resize: vertical; }
   100% { transform: translateX(0) rotate(0deg); }
 }
 
+
+@keyframes warpSpin {
+  from { transform: rotate(0deg) scale(1); }
+  50%  { transform: rotate(180deg) scale(1.04); }
+  to   { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes starDrift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-54px, -72px, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body::before,
+  body::after {
+    animation: none;
+  }
+}
 @keyframes slideIn {
   from { opacity: 0; transform: translateX(-12px); }
   to   { opacity: 1; transform: translateX(0); }
@@ -259,3 +321,5 @@ textarea { resize: vertical; }
 }
 
 .tag button:hover { color: var(--danger); }
+
+
