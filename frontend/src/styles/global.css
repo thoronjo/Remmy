@@ -7,11 +7,11 @@
   --bg: #080808;
   --bg-2: #0f0f0f;
   --bg-3: #1a1a1a;
-  --border: rgba(255, 255, 255, 0.08);
+  --border: rgba(180, 205, 235, 0.24);
   --border-yellow: rgba(232, 255, 71, 0.3);
-  --text: #e0e0e0;
-  --text-dim: #888;
-  --text-muted: #444;
+  --text: #eef4ff;
+  --text-dim: #b2c1d9;
+  --text-muted: #7f93ad;
   --danger: #ff6b6b;
   --success: #47ff8a;
   --radius: 12px;
@@ -68,7 +68,7 @@ body::after {
     radial-gradient(circle at 90% 76%, rgba(160, 225, 255, 0.72) 0 1.2px, transparent 1.35px);
   background-size: 220px 220px, 260px 260px, 240px 240px, 320px 320px, 300px 300px, 340px 340px, 280px 280px, 360px 360px;
   mix-blend-mode: screen;
-  opacity: 0.86;
+  opacity: 0.56;
   animation: starDrift 28s linear infinite;
 }
 
@@ -80,8 +80,8 @@ body::after {
 /* Inputs */
 input, textarea, select {
   font-family: 'DM Mono', monospace;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid var(--border);
+  background: rgba(6, 16, 30, 0.78);
+  border: 1px solid rgba(160, 190, 225, 0.34);
   border-radius: var(--radius-sm);
   color: var(--text);
   font-size: 0.9rem;
@@ -128,9 +128,9 @@ textarea { resize: vertical; }
 }
 
 .btn-secondary {
-  background: rgba(255,255,255,0.04);
+  background: rgba(6, 16, 30, 0.78);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(160, 190, 225, 0.34);
   border-radius: var(--radius);
   padding: 12px 20px;
   font-size: 0.875rem;
@@ -238,7 +238,7 @@ textarea { resize: vertical; }
 /* Card */
 .card {
   background: var(--bg-2);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(160, 190, 225, 0.34);
   border-radius: var(--radius);
   padding: 1.5rem;
 }
@@ -247,7 +247,7 @@ textarea { resize: vertical; }
 .option-card {
   padding: 14px 18px;
   background: rgba(255,255,255,0.03);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(160, 190, 225, 0.34);
   border-radius: var(--radius);
   cursor: pointer;
   transition: all 0.15s;
@@ -283,7 +283,7 @@ textarea { resize: vertical; }
 /* Tag */
 .tag {
   background: rgba(255,255,255,0.05);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(160, 190, 225, 0.34);
   border-radius: 6px;
   padding: 5px 10px;
   font-size: 0.8rem;
@@ -305,6 +305,7 @@ textarea { resize: vertical; }
 }
 
 .tag button:hover { color: var(--danger); }
+
 
 
 

@@ -328,11 +328,22 @@ export default function App() {
 
       {/* Main */}
       <main style={{
-        flex: 1, maxWidth: 680, width: '100%',
+        flex: 1, maxWidth: 760, width: '100%',
         margin: '0 auto', padding: '1.5rem 1.25rem 4rem',
       }}>
-        <div key={key}>
-          {renderStage()}
+        <div
+          style={{
+            background: 'rgba(4, 12, 24, 0.62)',
+            border: '1px solid rgba(160, 190, 225, 0.26)',
+            borderRadius: 18,
+            padding: '1.1rem 1.1rem 1.6rem',
+            backdropFilter: 'blur(4px)',
+            boxShadow: '0 18px 40px rgba(0, 0, 0, 0.35)',
+          }}
+        >
+          <div key={key}>
+            {renderStage()}
+          </div>
         </div>
       </main>
 
@@ -363,5 +374,7 @@ export default function App() {
     </div>
   );
 }
+
+
 
 
